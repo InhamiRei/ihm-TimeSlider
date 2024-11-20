@@ -53,8 +53,8 @@ class timeSlider extends CommonUtils {
     this.timeNow = ""; // 当前时间字符串
     this.timeLineOutClient = false; // 时间线是否超出屏幕了
     this.isValidMove = true; // 是否为有效的移动
-    this.curDaytimeChunkArray = config.curDaytimeChunkArray || []; // '001201-031236-A' 当天的时间块
-    this.timeChunkArray = this.curDaytimeChunkArray; // 当前展示的时间块
+    this.daytimeChunkArray = config.daytimeChunkArray || []; // '001201-031236-A' 当天的时间块
+    this.timeChunkArray = this.daytimeChunkArray; // 当前展示的时间块
     this.isInitialPlay = config.isInitialPlay || false;
     this.onClickCallback = config.onClick; // 外部监听点击事件回调
     this.onMoveCallback = config.onMove; // 外部监听移动事件回调
@@ -63,11 +63,11 @@ class timeSlider extends CommonUtils {
     this.initTimeChunk();
 
     // 模拟播放条件
-    if (config.presentSeconds && this.curDaytimeChunkArray.length) {
+    if (config.presentSeconds && this.daytimeChunkArray.length) {
       // 找出当前时间所在的时间块
-      for (let i = 0; i < this.curDaytimeChunkArray.length; i++) {
+      for (let i = 0; i < this.daytimeChunkArray.length; i++) {
         // 解析时间块的时间
-        let timeData = this.curDaytimeChunkArray[i].split("-");
+        let timeData = this.daytimeChunkArray[i].split("-");
         let startTime = timeData[0];
         let endTime = timeData[1];
         if (this.presentSeconds >= startTime && this.presentSeconds <= endTime) {
