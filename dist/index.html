@@ -1,8 +1,32 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Document</title><script src="../dist/main.js"></script></head><body><div id="timeSlider"></div><script src="main.js"></script><script src="esm.js"></script></body><script type="module">import {data} from "./data.js";
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Document</title><script src="../dist/main.js"></script></head><body><div id="arges-time-slider" class="arges-time-slider"></div><script src="main.js"></script><script src="esm.js"></script></body><script type="module">import { rawData } from "./data.js";
 
-    console.log("data", data);
+    const formatChunkArray = (data) => {
+      const result = {};
 
-    let timeSliderInstance = new initTimeSlider("#timeSlider", {
+      data.forEach(({ startTime, endTime }) => {
+        const dateKey = startTime.split(" ")[0];
+
+        if (!result[dateKey]) {
+          result[dateKey] = [];
+        }
+
+        const start = startTime.split(" ")[1].replace(/:/g, "").slice(0, 6);
+        const end = endTime.split(" ")[1].replace(/:/g, "").slice(0, 6);
+
+        const slot = `${start}-${end}-A`;
+
+        if (!result[dateKey].includes(slot)) {
+          result[dateKey].push(slot);
+        }
+      });
+      return result;
+    };
+
+    console.log("rawData", rawData);
+    console.log("resultData", formatChunkArray(rawData));
+
+    let timeSliderInstance = new initTimeSlider("#arges-time-slider", {
+      daytimeDateArray: ["2024-11-17", "2024-11-18"],
       daytimeChunkArray: [
         "080000-090000-A", // 08:00 - 09:00
         "090000-100000-A", // 09:00 - 10:00
@@ -13,8 +37,9 @@
         "140000-150000-A", // 14:00 - 15:00
         "150000-160000-A", // 15:00 - 16:00
         "160000-170000-A", // 16:00 - 17:00
-        "170000-180000-A"  // 17:00 - 18:00
+        "170000-180000-A", // 17:00 - 18:00
       ],
+
       presentSeconds: 20,
       timeChunkType: {
         A: "#0086dd",

@@ -98,14 +98,14 @@
   cursor: pointer;
 }
 
-#timeSlider {
+.arges-time-slider {
   position: relative;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 30px 20px;
+  padding: 15px 20px;
+  padding-bottom: 7px;
   background-color: #1e222e;
-  border: 2px solid #0086dd;
   overflow: hidden;
   user-select: none;
 }
@@ -118,7 +118,7 @@
 
 .ts-axis {
   background-color: rgba(255, 255, 255, 0.1);
-  height: 20px;
+  height: 15px;
   pointer-events: none;
   z-index: 99;
   color: rgba(255, 255, 255, 0.596078431372549);
@@ -131,10 +131,11 @@
   min-width: 48px;
   box-sizing: border-box;
   position: relative;
+  font-size: 12px;
 }
 
 .ts-timeChunk {
-  height: 20px;
+  height: 15px;
   /* display: none; */
   position: absolute;
   z-index: 99;
@@ -154,19 +155,19 @@
 
 .ts-axis-time {
   position: absolute;
-  top: -25px;
-  left: -20px;
+  top: -16px;
+  left: -16px;
 }
 
 .ts-axis-time-first {
   position: absolute;
-  top: -120%;
+  top: -100%;
   left: 0;
 }
 
 .ts-axis-time-last {
   position: absolute;
-  top: -120%;
+  top: -100%;
   left: 50%;
 }
 
@@ -175,13 +176,13 @@
 }
 
 .ts-line {
-  height: 30px;
+  height: 17px;
   border-left: 1px solid rgba(255, 255, 0, 1);
   box-sizing: border-box;
   color: white;
   font-size: 12px;
   position: absolute;
-  top: 25px;
+  top: 14px;
   z-index: 999;
   pointer-events: none;
 }
@@ -199,8 +200,8 @@
 }
 .ts-line-present {
   position: relative;
-  top: 33px;
-  left: -20px;
+  top: 0px;
+  left: -25px;
 }
 .ts-assist-line-present {
   position: relative;
