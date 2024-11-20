@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Document</title><script src="../dist/main.js"></script></head><body><div id="timeSlider"></div><script src="main.js"></script><script src="esm.js"></script></body><script type="module">import {data} from "./data.js";
+
+    console.log("data", data);
+
+    let timeSliderInstance = new initTimeSlider("#timeSlider", {
+      curDaytimeChunkArray: [
+        "080000-090000-A", // 08:00 - 09:00
+        "090000-100000-A", // 09:00 - 10:00
+        "100000-110000-A", // 10:00 - 11:00
+        "110000-120000-A", // 11:00 - 12:00
+        "120000-130000-A", // 12:00 - 13:00
+        "130000-140000-A", // 13:00 - 14:00
+        "140000-150000-A", // 14:00 - 15:00
+        "150000-160000-A", // 15:00 - 16:00
+        "160000-170000-A", // 16:00 - 17:00
+        "170000-180000-A"  // 17:00 - 18:00
+      ],
+      presentSeconds: 20,
+      timeChunkType: {
+        A: "red",
+        B: "yellow",
+        C: "blue",
+      },
+      speed: 1,
+      isInitialPlay: true,
+      onClick(oldSeconds, newSeconds) {
+        console.log("onClick", oldSeconds, newSeconds);
+      },
+      onMove() {
+        console.log("onMove");
+      },
+      onMouseDown() {
+        console.log("onM ousedown");
+      },
+    });</script></html>
