@@ -53,8 +53,6 @@
         "160000-170000-A", // 16:00 - 17:00
         "170000-180000-A", // 17:00 - 18:00
       ],
-
-      presentSeconds: 20,
       timeChunkType: {
         A: "#0086dd",
         B: "yellow",
@@ -62,8 +60,12 @@
       },
       speed: 1,
       isInitialPlay: false,
-      onClick(oldSeconds, newSeconds) {
-        console.log("onClick", oldSeconds, newSeconds);
+      extInfo: {
+        title: "Arges Time Slider Demo",
+        channel: "001002001003"
+      },
+      onClick(timeNow, info) {
+        console.log("onClick", timeNow, info);
       },
       onMove() {
         console.log("onMove");
@@ -72,5 +74,7 @@
         console.log("onM ousedown");
       },
     });
+
+    console.log("timeSliderInstance", timeSliderInstance)
   </script>
 </html>

@@ -59,24 +59,25 @@ class timeSlider extends CommonUtils {
     this.onClickCallback = config.onClick; // 外部监听点击事件回调
     this.onMoveCallback = config.onMove; // 外部监听移动事件回调
     this.onMouseDownCallback = config.onMouseDown; // 外部监听mousedown事件
+    this.extInfo = config.extInfo || {}; // 扩展信息
     this.initAxis();
     this.initTimeChunk();
 
     // 模拟播放条件
-    if (config.presentSeconds && this.daytimeChunkArray.length) {
-      // 找出当前时间所在的时间块
-      for (let i = 0; i < this.daytimeChunkArray.length; i++) {
-        // 解析时间块的时间
-        let timeData = this.daytimeChunkArray[i].split("-");
-        let startTime = timeData[0];
-        let endTime = timeData[1];
-        if (this.presentSeconds >= startTime && this.presentSeconds <= endTime) {
-          this.curPlayTimeChunk = [startTime, endTime, i];
-          this.isInitialPlay && this.timeLinePlay();
-          break;
-        }
-      }
-    }
+    // if (config.presentSeconds && this.daytimeChunkArray.length) {
+    //   // 找出当前时间所在的时间块
+    //   for (let i = 0; i < this.daytimeChunkArray.length; i++) {
+    //     // 解析时间块的时间
+    //     let timeData = this.daytimeChunkArray[i].split("-");
+    //     let startTime = timeData[0];
+    //     let endTime = timeData[1];
+    //     if (this.presentSeconds >= startTime && this.presentSeconds <= endTime) {
+    //       this.curPlayTimeChunk = [startTime, endTime, i];
+    //       this.isInitialPlay && this.timeLinePlay();
+    //       break;
+    //     }
+    //   }
+    // }
   }
   // 重新初始化时间轴精度
   initAxis(flag) {
@@ -139,6 +140,9 @@ class timeSlider extends CommonUtils {
     let that = this;
     // 鼠标滑动时间轴
     this.rootDom.addEventListener("mousedown", (e) => {
+      if (!this.timeChunkArray.length) {
+        return;
+      }
       that.isMouseDown = true;
       that.startX = e.offsetX;
       this.startLeft = that.domLeftToNumberUtils(that.containerDom);
@@ -147,6 +151,9 @@ class timeSlider extends CommonUtils {
       this.isValidMove = true;
     });
     this.rootDom.addEventListener("mousemove", (e) => {
+      if (!this.timeChunkArray.length) {
+        return;
+      }
       // 判断是否在移动
       if (this.isMouseDown && new Date().getTime() - that.startMouseDownTime > 300) {
         try {
@@ -174,6 +181,9 @@ class timeSlider extends CommonUtils {
       this.showMouseMoveAssistTimeLine(e.offsetX);
     });
     this.rootDom.addEventListener("mouseup", (e) => {
+      if (!this.timeChunkArray.length) {
+        return;
+      }
       this.assistTimeLineDom.style.display = "none";
       this.assistTimeLinePresentDom.style.display = "none";
       let oldPresentSeconds = this.presentSeconds;
@@ -199,14 +209,19 @@ class timeSlider extends CommonUtils {
       }
     });
     this.rootDom.addEventListener("mouseout", (e) => {
+      if (!this.timeChunkArray.length) {
+        return;
+      }
       that.isMouseDown = false;
       this.assistTimeLineDom.style.display = "none";
       this.assistTimeLinePresentDom.style.display = "none";
       this.rootDom.classList.remove("ts-move");
     });
-
     // 鼠标滑动进行缩放
     this.rootDom.addEventListener("mousewheel", (e) => {
+      if (!this.timeChunkArray.length) {
+        return;
+      }
       let oldAllAxisLength = that.allAxisLength;
       let oldTimeLineLeft = this.domLeftToNumberUtils(this.timeLineDom);
       if (e.wheelDelta > 0) {
@@ -248,10 +263,15 @@ class timeSlider extends CommonUtils {
    * @param {number} left 鼠标点击时offsetX的值
    */
   handleClick(left) {
+    // 之前的值，保留计算不影响逻辑
     let oldPresentSeconds = this.presentSeconds;
     this.presentSeconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
+
+    // 真正的点击事件
+    let seconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
+    let timeNow = this.secondsTranslateTimeUtils(seconds);
     try {
-      this.onClickCallback && this.onClickCallback(Math.floor(oldPresentSeconds), Math.floor(this.presentSeconds));
+      this.onClickCallback && this.onClickCallback(timeNow, this.extInfo);
     } catch (err) {
       console.warn(err);
     }
@@ -322,8 +342,8 @@ class timeSlider extends CommonUtils {
   }
 
   /**
-    * 获取长度
-    * @param {number} precision 精度大小 1|5|10|30|60
+   * 获取长度
+   * @param {number} precision 精度大小 1|5|10|30|60
    */
   calTimeSlider() {
     let axisDom = this.getDomInstanceUtils(".ts-axis");
@@ -334,9 +354,9 @@ class timeSlider extends CommonUtils {
   }
 
   /**
-    * 时间轴dom的展示
-    * @param {number} precision 精度大小 1|5|10|30|60
-  */
+   * 时间轴dom的展示
+   * @param {number} precision 精度大小 1|5|10|30|60
+   */
   initTimeAxisDom(precision) {
     this.containerDom.innerHTML = "";
     const axisNum = this.precisionSetting[precision]; // 获取轴的数量
@@ -429,6 +449,9 @@ class timeSlider extends CommonUtils {
    * 设置时间线的位置
    */
   setTimeLineLeft() {
+    if (!this.timeChunkArray.length) {
+      return;
+    }
     let left = this.presentSeconds * (this.allAxisLength / this.DAYSECONDS);
     left = left + this.domLeftToNumberUtils(this.containerDom);
     this.timeLineDom.style.left = this.PADDINGLEFT + left + "px";
@@ -548,6 +571,31 @@ class timeSlider extends CommonUtils {
     let leftPx = seconds * (this.allAxisLength / this.DAYSECONDS);
     leftPx = leftPx + this.domLeftToNumberUtils(this.containerDom);
     this.assistTimeLineDom.style.left = this.PADDINGLEFT + leftPx + "px";
+  }
+
+  /**
+   * 销毁组件
+   */
+  destroy() {
+    // 清理定时器
+    this.timeLineStop();
+
+    // 移除事件监听器
+    this.rootDom.removeEventListener("mousedown", this.handleMouseDown);
+    this.rootDom.removeEventListener("mousemove", this.handleMouseMove);
+    this.rootDom.removeEventListener("mouseup", this.handleMouseUp);
+    this.rootDom.removeEventListener("mouseout", this.handleMouseOut);
+    this.rootDom.removeEventListener("mousewheel", this.handleMouseWheel);
+
+    // 清理DOM引用
+    this.containerDom.innerHTML = "";
+    this.rootDom.innerHTML = "";
+    this.containerDom = null;
+    this.rootDom = null;
+
+    // 可选：清空其他相关属性
+    this.timeChunkArray = [];
+    this.curPlayTimeChunk = [];
   }
 }
 
