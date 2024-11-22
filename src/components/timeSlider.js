@@ -59,7 +59,7 @@ class timeSlider extends CommonUtils {
     this.onClickCallback = config.onClick; // 外部监听点击事件回调
     this.onMoveCallback = config.onMove; // 外部监听移动事件回调
     this.onMouseDownCallback = config.onMouseDown; // 外部监听mousedown事件
-    this.extInfo = config.extInfo || {}; // 扩展信息
+    this.extraInfo = config.extraInfo || {}; // 扩展信息
     this.initAxis();
     this.initTimeChunk();
 
@@ -256,6 +256,14 @@ class timeSlider extends CommonUtils {
       }
       this.setTimeLineLeft();
     });
+    // // 增加双击事件
+    // this.rootDom.addEventListener("dblclick", (e) => {
+    //   if (!this.timeChunkArray.length) {
+    //     return;
+    //   }
+    //   console.log("双击", e.offsetX);
+    //   this.handleClick(e.offsetX);
+    // });
   }
 
   /**
@@ -271,7 +279,7 @@ class timeSlider extends CommonUtils {
     let seconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
     let timeNow = this.secondsTranslateTimeUtils(seconds);
     try {
-      this.onClickCallback && this.onClickCallback(timeNow, this.extInfo);
+      this.onClickCallback && this.onClickCallback(timeNow, this.extraInfo);
     } catch (err) {
       console.warn(err);
     }
