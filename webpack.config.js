@@ -1,7 +1,5 @@
 // 引入 Node.js 自带的 path 模块，用于解析文件和目录路径
 const path = require("path");
-// 引入 html-webpack-plugin，用于生成 HTML 文件并自动插入打包好的文件
-const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 // 自定义模块
 module.exports = {
@@ -16,9 +14,9 @@ module.exports = {
   },
   // 定义入口文件，指定项目的主入口
   entry: {
-    // 定义一个名为 main 的入口，指向 ./src/index.js 文件
+    // 定义一个名为 main 的入口，指向 ./src/index.js 文件， 可以是为 CommonJS 或 浏览器环境 定制的文件
     main: "./src/index.js",
-    // 定义另一个名为 esm 的入口，也指向 ./src/index.js
+    // 定义另一个名为 esm 的入口，也指向 ./src/index.js，可以是为 ES Module（现代模块系统）定制的文件
     esm: "./src/index.js",
   },
   // 定义输出文件的配置
@@ -65,11 +63,5 @@ module.exports = {
     ],
   },
   // 配置插件列表
-  plugins: [
-    // 创建一个 HtmlWebpackPlugin 实例
-    new HtmlWebpackPlugin({
-      // 指定模板 HTML 文件为 ./src/demo.html，用于生成最终的 HTML 文件
-      template: `./src/demo.html`,
-    }),
-  ],
+  plugins: [],
 };
