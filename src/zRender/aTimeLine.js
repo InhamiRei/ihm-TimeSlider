@@ -1,13 +1,13 @@
 class Timeline {
-  constructor(container, initialDate, data) {
-    this.container = container;
-    this.date = new Date(initialDate); // 当前显示的日期
-    this.data = data; // 录像数据
+  constructor(config) {
+    this.container = this.getContainer(config.id);
+    this.date = new Date(config.curDay); // 当前显示的日期
+    this.data = config.data; // 录像数据
     this.zr = zrender.init(this.container); // zRender 实例
 
     this.padding = { top: 0, bottom: 0, left: 25, right: 25 };
 
-    this.trackHeight = 30; // 每条轨道的高度
+    this.trackHeight = 25; // 每条轨道的高度
     this.trackGap = 0; // 每条轨道的间隔
     this.timelineWidth = this.container.offsetWidth - this.padding.left - this.padding.right;
     this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
@@ -15,6 +15,15 @@ class Timeline {
     this.onDateChange = null; // 日期变更回调
 
     this.render();
+  }
+
+  // 获取元素
+  getContainer(id) {
+    const container = document.getElementById(id);
+    if (!container) {
+      throw new Error(`Container ${id} not found`);
+    }
+    return container;
   }
 
   // 绘制时间轴
@@ -31,24 +40,50 @@ class Timeline {
     // 绘制时间刻度
     const rulerGroup = new zrender.Group({ position: [this.padding.left, this.padding.top] });
 
+    // 绘制上方刻度部分的边框
+    const rulerBorder = new zrender.Rect({
+      shape: {
+        x: 0, // 从刻度起始点
+        y: 0, // 上边距
+        width: this.timelineWidth, // 刻度的宽度
+        height: 30, // 刻度区域高度
+      },
+      style: {
+        stroke: "#ccc", // 边框颜色
+        lineWidth: 1, // 边框线宽
+        fill: "transparent", // 刻度区域背景透明
+      },
+    });
+    rulerGroup.add(rulerBorder);
+
     for (let i = 0; i <= totalHours; i++) {
       const x = (i / totalHours) * this.timelineWidth;
 
-      // 刻度线的高度和颜色
-      const line = new zrender.Line({
-        // x1-起始点横坐标 y1-起始点纵坐标 x2-终止点横坐标 y2-终止点纵坐标
-        shape: { x1: x, y1: 15, x2: x, y2: 25 },
-        style: { stroke: "#888", lineWidth: 1 },
-      });
+      // 需要对00:00和24:00不绘制刻度线
+      if (i !== 0 && i !== 24) {
+        const line = new zrender.Line({
+          // x1-起始点横坐标 y1-起始点纵坐标 x2-终止点横坐标 y2-终止点纵坐标
+          shape: { x1: x, y1: 23, x2: x, y2: 30 },
+          style: { stroke: "#888", lineWidth: 1 },
+        });
 
-      // 刻度线文本，要进行 '1'->'01'的处理
-      const zT = i >= 10 ? i : "0" + i;
+        rulerGroup.add(line);
+      }
+
+      // 需要对00:00和24:00做特殊的处理，因为会超出绘制的区域
+      let cX = x - 15;
+      if (i === 0) {
+        cX = x + 3;
+      }
+      if (i === 24) {
+        cX = x - 35;
+      }
 
       const text = new zrender.Text({
         style: {
-          text: `${zT}:00`,
-          x: x - 15,
-          y: 0,
+          text: i >= 10 ? `${i}:00` : `0${i}:00`, // 刻度线文本，要进行 '1'->'01'的处理
+          x: cX,
+          y: 7,
           fill: "#fff",
           fontSize: 12,
           textAlign: "center",
@@ -56,7 +91,6 @@ class Timeline {
         },
       });
 
-      rulerGroup.add(line);
       rulerGroup.add(text);
     }
 
@@ -73,15 +107,15 @@ class Timeline {
       // 绘制轨道边框
       const borderShapes = [];
 
-      // 上边框
-      if (trackIndex === 0) {
-        borderShapes.push({
-          x1: 0,
-          y1: y,
-          x2: this.timelineWidth,
-          y2: y,
-        });
-      }
+      // // 上边框
+      // if (trackIndex === 0) {
+      //   borderShapes.push({
+      //     x1: 0,
+      //     y1: y,
+      //     x2: this.timelineWidth,
+      //     y2: y,
+      //   });
+      // }
 
       // 左边框
       borderShapes.push({
