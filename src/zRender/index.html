@@ -69,6 +69,14 @@
             "2024-11-18": [{ startTime: "2024-11-18 11:00:00", endTime: "2024-11-18 12:00:00" }],
           },
         ],
+        dbClick: ({ time, event }) => {
+          console.log(`双击录像段: ${time}`);
+          console.log("event", event);
+        },
+        rtClick: ({ time, event }) => {
+          console.log(`右键录像段：${time}`);
+          console.log("event", event);
+        },
       };
 
       // 初始化时间轴组件

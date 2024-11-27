@@ -13,6 +13,8 @@ class Timeline {
     this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
 
     this.onDateChange = null; // 日期变更回调
+    this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
+    this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
 
     this.render();
   }
@@ -72,12 +74,8 @@ class Timeline {
 
       // 需要对00:00和24:00做特殊的处理，因为会超出绘制的区域
       let cX = x - 15;
-      if (i === 0) {
-        cX = x + 3;
-      }
-      if (i === 24) {
-        cX = x - 35;
-      }
+      if (i === 0) cX = x + 3;
+      if (i === 24) cX = x - 35;
 
       const text = new zrender.Text({
         style: {
@@ -176,6 +174,23 @@ class Timeline {
           },
         });
 
+        // 内部双击事件
+        recordingSegment.on("dblclick", (event) => {
+          if (this.onSegmentDblClick) {
+            const time = this.calculateTimeFromOffset(event.offsetX);
+            this.onSegmentDblClick({ time, event });
+          }
+        });
+
+        // 内部右键事件
+        recordingSegment.on("contextmenu", (event) => {
+          event.event.preventDefault(); // 阻止默认右键菜单
+          if (this.onSegmentContextMenu) {
+            const time = this.calculateTimeFromOffset(event.offsetX);
+            this.onSegmentContextMenu({ time, event });
+          }
+        });
+
         tracksGroup.add(recordingSegment);
       });
     });
@@ -209,5 +224,37 @@ class Timeline {
   // 设置日期变更回调
   setDateChangeCallback(callback) {
     this.onDateChange = callback;
+  }
+
+  calculateTimeFromOffset(offsetX) {
+    const timelineStart = this.padding.left; // 时间轴起点横坐标
+    const timelineEnd = this.padding.left + this.timelineWidth; // 时间轴终点横坐标
+    const totalHours = 24;
+    console.log("timelineStart:", timelineStart, "timelineEnd:", timelineEnd, "offsetX:", offsetX);
+    // 确保点击位置在时间轴范围内
+    if (offsetX < timelineStart || offsetX > timelineEnd) {
+      return null;
+    }
+
+    // 计算点击位置对应的时间
+    const positionRatio = (offsetX - timelineStart) / (timelineEnd - timelineStart);
+    const totalSeconds = Math.round(positionRatio * totalHours * 3600); // 转换为总秒数
+
+    console.log("positionRatio:", positionRatio, "totalSeconds:", totalSeconds)
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    console.log("hours:", hours, "minutes:", minutes, "seconds:", seconds)
+
+    const year = this.date.getFullYear();
+    const month = String(this.date.getMonth() + 1).padStart(2, "0");
+    const day = String(this.date.getDate()).padStart(2, "0");
+    const time = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+    console.log("year:", year, "month:", month, "day:", day, "time:", time)
+
+    return `${year}-${month}-${day} ${time}`;
   }
 }
