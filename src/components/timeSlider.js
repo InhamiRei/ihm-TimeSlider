@@ -1,610 +1,261 @@
-import CommonUtils from "./commonUtils";
-import timeChunk from "./timeChunk";
-const CONFIG = {
-  precisionSetting: {
-    10: 8640, // 10s
-    60: 1440, // 1min
-    300: 288, // 5min
-    600: 144, // 10min
-    1800: 48, // 30min
-    3600: 24, // 1h
-  },
-  wheelIndexMap: [3600, 1800, 600, 300, 60, 10],
-  speed: 1, // 速度
-};
-/**
- * 时间轴组件类
- * @param {el} 元素选择器
- * @param {config} 配置参数
- */
-class timeSlider extends CommonUtils {
-  constructor(el, config = {}) {
-    super();
-    this.el = el;
-    this.PRECISION = 3600; // 最小精度
-    this.DAYSECONDS = 60 * 60 * 24; // 一天的秒数
-    this.PADDINGLEFT = 20; // 根元素的padding值
-    this.precisionSetting = CONFIG.precisionSetting; // 精度对应参数
+class ihm_TimeSlider {
+  constructor(config) {
+    this.container = this.getContainer(config.id);
+    this.date = new Date(config.curDay); // 当前显示的日期
+    this.data = config.data; // 录像数据
 
-    // 初始化dom元素
-    this.initDomInfo();
-    // 初始化事件监听
-    this.initRootDomEvent();
-    // 初始化时间轴
-    this.initTimeAxisDom(this.PRECISION);
-    this.timeChunkType = config.timeChunkType;
-    // 交互相关
-    this.isMouseDown = false; // 是否按下鼠标了
-    this.startX = null; // 开始坐标
-    this.startLeft = null; // 开始left距离
-    this.startMouseDownTime = null; // 开始按下鼠标时间
-    this.wheelIndex = 0; // 时间轴缩放精度值的索引
-    this.wheelIndexMap = CONFIG.wheelIndexMap; // 精度时间的集合
-    this.speed = config.speed || CONFIG.speed; // 倍速
+    this.padding = { top: 0, bottom: 0, left: 25, right: 25 };
 
-    this.timer = null; // 定时器，测试用
-    this.curPlayTimeChunk = []; // 目前播放的时间块 0->开始时间 1->结束时间 2->时间块的索引
+    this.trackHeight = 25; // 每条轨道的高度
+    this.trackGap = 0; // 每条轨道的间隔
+    this.timelineWidth = this.container.offsetWidth - this.padding.left - this.padding.right;
+    this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
 
-    // 长度相关
-    this.axisLength = null;
-    this.allAxisLength = null;
+    this.onDateChange = null; // 日期变更回调
+    this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
+    this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
 
-    this.presentSeconds = config.presentSeconds || 0; // 当前时间(s)
-    this.timeNow = ""; // 当前时间字符串
-    this.timeLineOutClient = false; // 时间线是否超出屏幕了
-    this.isValidMove = true; // 是否为有效的移动
-    this.daytimeChunkArray = config.daytimeChunkArray || []; // '001201-031236-A' 当天的时间块
-    this.timeChunkArray = this.daytimeChunkArray; // 当前展示的时间块
-    this.isInitialPlay = config.isInitialPlay || false;
-    this.onClickCallback = config.onClick; // 外部监听点击事件回调
-    this.onMoveCallback = config.onMove; // 外部监听移动事件回调
-    this.onMouseDownCallback = config.onMouseDown; // 外部监听mousedown事件
-    this.extraInfo = config.extraInfo || {}; // 扩展信息
-    this.initAxis();
-    this.initTimeChunk();
-
-    // 模拟播放条件
-    // if (config.presentSeconds && this.daytimeChunkArray.length) {
-    //   // 找出当前时间所在的时间块
-    //   for (let i = 0; i < this.daytimeChunkArray.length; i++) {
-    //     // 解析时间块的时间
-    //     let timeData = this.daytimeChunkArray[i].split("-");
-    //     let startTime = timeData[0];
-    //     let endTime = timeData[1];
-    //     if (this.presentSeconds >= startTime && this.presentSeconds <= endTime) {
-    //       this.curPlayTimeChunk = [startTime, endTime, i];
-    //       this.isInitialPlay && this.timeLinePlay();
-    //       break;
-    //     }
-    //   }
-    // }
+    this.render();
   }
-  // 重新初始化时间轴精度
-  initAxis(flag) {
-    // todo
-    if (this.timeChunkArray.length === 0) {
-      // document.getElementsByClassName('ts-line')[0].style.display = 'none';
-      this.timeLineDom = null;
-      // document.getElementsByClassName('ts-timeChunk')[0].style.display = 'none';
-    } else {
-      this.initTimeAxisDom(this.wheelIndexMap[this.wheelIndex]);
-      this.calTimeSlider();
-      !flag && this.setTimeLineLeft();
-      // 时间块
-      this.initTimeChunk();
+
+  // 获取元素
+  getContainer(id) {
+    const container = document.getElementById(id);
+    if (!container) {
+      throw new Error(`Container ${id} not found`);
+    }
+    return container;
+  }
+
+  // 主渲染方法
+  render() {
+    // 清空容器
+    this.container.innerHTML = "";
+
+    const currentDateStr = this.date.toISOString().split("T")[0];
+    const recordingsPerTrack = this.data.map((trackData) => trackData[currentDateStr] || []);
+    const totalTracks = recordingsPerTrack.length;
+
+    // 创建时间轴容器
+    const timelineContainer = document.createElement("div");
+    timelineContainer.style.position = "relative";
+    timelineContainer.style.paddingLeft = `${this.padding.left}px`;
+    timelineContainer.style.paddingRight = `${this.padding.right}px`;
+
+    // 添加顶部
+    timelineContainer.appendChild(this.renderTopbar());
+    // 添加录像轨道
+    timelineContainer.appendChild(this.renderTracks(recordingsPerTrack, totalTracks));
+
+    this.container.appendChild(timelineContainer);
+
+    // 触发日期变更回调
+    if (this.onDateChange) {
+      this.onDateChange(currentDateStr);
     }
   }
 
-  // 初始化时间块
-  initTimeChunk() {
-    this.timeChunkArray.forEach((item, index) => {
-      let dom = new timeChunk(item).createDom(this.allAxisLength, this.timeChunkType);
-      this.containerDom.appendChild(dom);
+  // 创建时间刻度
+  renderTopbar() {
+    const topbarContainer = document.createElement("div");
+    topbarContainer.className = "ihm-timeSlider-topbarContainer";
+    topbarContainer.style.position = "relative";
+    topbarContainer.style.height = "30px";
+    topbarContainer.style.border = "1px solid #ccc"; // 仅下边框
+    topbarContainer.style.borderBottom = "none"; // 仅下边框
+    topbarContainer.style.display = "flex";
+
+    const infoContainer = document.createElement("div");
+    infoContainer.className = "ihm-timeSlider-topbarContainer-info";
+    infoContainer.style.width = "160px";
+    infoContainer.style.display = "flex";
+    infoContainer.style.alignItems = "center";
+    infoContainer.style.justifyContent = "space-around";
+    infoContainer.style.borderRight = "1px solid #ccc"; // 右边框
+    infoContainer.innerHTML = `
+    <svg t="1733727315169" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1106" width="18" height="18">
+      <path d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z" p-id="1107" fill="#fff"></path>
+      <path d="M710.3 478H540V307.7c0-17.1-13.9-31-31-31s-31 13.9-31 31V478H307.7c-17.1 0-31 13.9-31 31s13.9 31 31 31H478v170.3c0 17.1 13.9 31 31 31s31-13.9 31-31V540h170.3c17.1 0 31-13.9 31-31s-13.9-31-31-31z" p-id="1108" fill="#fff"></path>
+    </svg>
+    <svg t="1733725745183" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1644" width="18" height="18">
+      <path d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z" p-id="1646" fill="#fff"></path>
+      <path d="M510.448485 366.467879a31.030303 31.030303 0 0 1 0 43.876848l-109.723152 109.723152 109.723152 109.692121a31.030303 31.030303 0 1 1-43.876849 43.907879l-131.661575-131.661576a31.030303 31.030303 0 0 1 0-43.876848l131.661575-131.661576a31.030303 31.030303 0 0 1 43.876849 0z" fill="#fff" p-id="1646"></path>
+      <path d="M325.818182 520.067879a31.030303 31.030303 0 0 1 31.030303-31.030303h310.30303a31.030303 31.030303 0 1 1 0 62.060606H356.848485a31.030303 31.030303 0 0 1-31.030303-31.030303z" fill="#fff" p-id="1647"></path>
+    </svg>
+    <span style="font-size: 14px; color: #fff;">2024-11-17</span>
+    <svg t="1733725745183" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1644" width="18" height="18" style="transform:rotate(180deg);">>
+      <path d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z" p-id="1646" fill="#fff"></path>
+      <path d="M510.448485 366.467879a31.030303 31.030303 0 0 1 0 43.876848l-109.723152 109.723152 109.723152 109.692121a31.030303 31.030303 0 1 1-43.876849 43.907879l-131.661575-131.661576a31.030303 31.030303 0 0 1 0-43.876848l131.661575-131.661576a31.030303 31.030303 0 0 1 43.876849 0z" fill="#fff" p-id="1646"></path>
+      <path d="M325.818182 520.067879a31.030303 31.030303 0 0 1 31.030303-31.030303h310.30303a31.030303 31.030303 0 1 1 0 62.060606H356.848485a31.030303 31.030303 0 0 1-31.030303-31.030303z" fill="#fff" p-id="1647"></path>
+    </svg>
+    <svg t="1733727410968" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1341" width="18" height="18">
+      <path d="M818.4 98.2H199.6c-55.9 0-101.4 45.5-101.4 101.4v618.8c0 55.9 45.5 101.4 101.4 101.4h618.8c55.9 0 101.4-45.5 101.4-101.4V199.6c0-55.9-45.5-101.4-101.4-101.4zM859 818.4c0 22.4-18.2 40.6-40.6 40.6H199.6c-22.4 0-40.6-18.2-40.6-40.6V199.6c0-22.4 18.2-40.6 40.6-40.6h618.8c22.4 0 40.6 18.2 40.6 40.6v618.8z" p-id="1342" fill="#fff"></path>
+      <path d="M706.8 478.6H311.2c-16.8 0-30.4 13.6-30.4 30.4 0 16.8 13.6 30.4 30.4 30.4h395.6c16.8 0 30.4-13.6 30.4-30.4 0-16.8-13.6-30.4-30.4-30.4z" p-id="1343" fill="#fff"></path>
+    </svg>
+    `;
+    topbarContainer.appendChild(infoContainer);
+
+    const totalHours = 24;
+    const timelineContainer = document.createElement("div");
+    timelineContainer.className = "ihm-timeSlider-topbarContainer-timeline";
+    timelineContainer.style.flexGrow = "1";
+    timelineContainer.style.position = "relative";
+
+    for (let i = 0; i <= totalHours; i++) {
+      const x = (i / totalHours) * (this.timelineWidth - 160);
+
+      if (i !== 0 && i !== 24) {
+        const line = document.createElement("div");
+        line.style.position = "absolute";
+        line.style.left = `${x}px`;
+        line.style.bottom = "0";
+        line.style.height = "7px";
+        line.style.width = "1px";
+        line.style.backgroundColor = "#888";
+        timelineContainer.appendChild(line);
+      }
+
+      let labelOffset = -15;
+      if (i === 0) labelOffset = 3;
+      if (i === 24) labelOffset = -35;
+
+      const label = document.createElement("div");
+      label.style.position = "absolute";
+      label.style.left = `${x + labelOffset}px`;
+      label.style.bottom = "10px";
+      label.style.color = "#fff";
+      label.style.fontSize = "12px";
+      label.textContent = i >= 10 ? `${i}:00` : `0${i}:00`;
+
+      timelineContainer.appendChild(label);
+    }
+
+    topbarContainer.appendChild(timelineContainer);
+
+    return topbarContainer;
+  }
+
+  // 创建录像轨道
+  renderTracks(recordingsPerTrack, totalTracks) {
+    const totalHours = 24;
+
+    const tracksContainer = document.createElement("div");
+    tracksContainer.className = "ihm-timeSlider-trackContainer";
+    tracksContainer.style.position = "relative";
+
+    recordingsPerTrack.forEach((recordings, trackIndex) => {
+      const trackRow = document.createElement("div");
+      trackRow.className = "ihm-timeSlider-trackContainer-trackRow";
+      trackRow.style.position = "relative";
+      trackRow.style.flexGrow = "1";
+      trackRow.style.height = `${this.trackHeight}px`;
+      trackRow.style.border = "1px solid #ccc";
+      trackRow.style.borderBottom = "none";
+      // 最后一个轨道元素
+      if (trackIndex === totalTracks - 1) {
+        trackRow.style.borderBottom = "1px solid #ccc";
+      }
+      trackRow.style.display = "flex";
+
+      const infoContainer = document.createElement("div");
+      infoContainer.className = "ihm-timeSlider-trackContainer-trackRow-info";
+      infoContainer.style.width = "160px";
+      infoContainer.style.display = "flex";
+      infoContainer.style.alignItems = "center";
+      infoContainer.style.justifyContent = "center";
+      infoContainer.style.padding = "0 10px";
+      infoContainer.style.borderRight = "1px solid #ccc"; // 右边框
+      infoContainer.innerHTML = `
+        <span style="font-size: 14px; color: #fff;">窗口${trackIndex + 1}</span>
+      `;
+      trackRow.appendChild(infoContainer);
+
+      const sliderContainer = document.createElement("div");
+      sliderContainer.className = "ihm-timeSlider-trackContainer-trackRow-slider";
+      sliderContainer.style.flexGrow = "1";
+      sliderContainer.style.position = "relative";
+
+      recordings.forEach(({ startTime, endTime }) => {
+        const startDate = new Date(startTime);
+        const endDate = new Date(endTime);
+
+        const startHour = startDate.getHours() + startDate.getMinutes() / 60;
+        const endHour = endDate.getHours() + endDate.getMinutes() / 60;
+
+        const xStart = (startHour / totalHours) * (this.timelineWidth - 160);
+        const width = ((endHour - startHour) / totalHours) * (this.timelineWidth - 160);
+
+        const recordingSegment = document.createElement("div");
+        recordingSegment.style.position = "absolute";
+        recordingSegment.style.left = `${xStart}px`;
+        recordingSegment.style.top = "0";
+        recordingSegment.style.height = `${this.trackHeight}px`;
+        recordingSegment.style.width = `${width}px`;
+        recordingSegment.style.backgroundColor = "rgba(0, 128, 255, 0.7)";
+
+        // 双击事件
+        recordingSegment.addEventListener("dblclick", (event) => {
+          if (this.onSegmentDblClick) {
+            const time = this.calculateTimeFromOffset(event.offsetX);
+            this.onSegmentDblClick({ time, event });
+          }
+        });
+
+        // 右键事件
+        recordingSegment.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+          if (this.onSegmentContextMenu) {
+            const time = this.calculateTimeFromOffset(event.offsetX);
+            this.onSegmentContextMenu({ time, event });
+          }
+        });
+
+        sliderContainer.appendChild(recordingSegment);
+      });
+      trackRow.appendChild(sliderContainer);
+      tracksContainer.appendChild(trackRow);
     });
+
+    return tracksContainer;
   }
 
-  // 初始化dom信息
-  initDomInfo() {
-    this.rootDom = this.getDomInstanceUtils(this.el);
-    // 创建容器元素
-    let containerDiv = document.createElement("div");
-    containerDiv.classList.add("ts-container");
-    this.rootDom.appendChild(containerDiv);
-    this.containerDom = containerDiv;
-    // 初始化时间线
-    let div = document.createElement("div");
-    let span = document.createElement("span");
-
-    // 初始化辅助时间线
-    let divAssist = document.createElement("div");
-    let spanAssist = document.createElement("span");
-    divAssist.classList.add("ts-assist-line");
-    spanAssist.classList.add("ts-assist-line-present");
-    div.classList.add("ts-line");
-    span.classList.add("ts-line-present");
-    span.innerHTML = "00:00:00";
-    spanAssist.innerHTML = "00:00:00";
-    div.appendChild(span);
-    divAssist.appendChild(spanAssist);
-    this.rootDom.appendChild(div);
-    this.rootDom.appendChild(divAssist);
-    // 时间线dom
-    this.timeLinePresentDom = span;
-    this.timeLineDom = div;
-    // 辅助线dom
-    this.assistTimeLinePresentDom = spanAssist;
-    this.assistTimeLineDom = divAssist;
+  // 切换到前一天
+  prevDay() {
+    this.date.setDate(this.date.getDate() - 1);
+    this.render();
   }
 
-  initRootDomEvent() {
-    let that = this;
-    // 鼠标滑动时间轴
-    this.rootDom.addEventListener("mousedown", (e) => {
-      if (!this.timeChunkArray.length) {
-        return;
-      }
-      that.isMouseDown = true;
-      that.startX = e.offsetX;
-      this.startLeft = that.domLeftToNumberUtils(that.containerDom);
-      this.startMouseDownTime = new Date().getTime();
-      this.rootDom.classList.add("ts-move");
-      this.isValidMove = true;
-    });
-    this.rootDom.addEventListener("mousemove", (e) => {
-      if (!this.timeChunkArray.length) {
-        return;
-      }
-      // 判断是否在移动
-      if (this.isMouseDown && new Date().getTime() - that.startMouseDownTime > 300) {
-        try {
-          this.onMoveCallback && this.onMoveCallback();
-        } catch (e) {}
-      }
-      if (that.isMouseDown && this.precision !== 3600) {
-        let offsetX = e.offsetX - this.startX;
-        let isDragToLeft = offsetX < 0;
-        let isDragToRight = offsetX > 0;
-        // 滚动到临界值
-        let isRightOver = this.allAxisLength + that.containerDom.offsetLeft < 20 + this.rootDom.offsetWidth;
-        if (this.startLeft + offsetX > 20 && isDragToRight) {
-          that.containerDom.style.left = 0 + "px";
-          this.isValidMove = false;
-          return;
-        } else if (isRightOver && isDragToLeft) {
-          that.containerDom.style.left = -this.allAxisLength + this.rootDom.offsetWidth - 35 + "px";
-          this.isValidMove = false;
-          return;
-        }
-        that.containerDom.style.left = this.startLeft + offsetX + "px";
-      }
-      // 处理辅助时间线
-      this.showMouseMoveAssistTimeLine(e.offsetX);
-    });
-    this.rootDom.addEventListener("mouseup", (e) => {
-      if (!this.timeChunkArray.length) {
-        return;
-      }
-      this.assistTimeLineDom.style.display = "none";
-      this.assistTimeLinePresentDom.style.display = "none";
-      let oldPresentSeconds = this.presentSeconds;
-      // 处理点击事件
-      if (new Date().getTime() - that.startMouseDownTime < 300) {
-        console.log("点击", e.offsetX);
-        this.handleClick(e.offsetX);
-      } else {
-        // 计算当前时间
-        this.calCurPreseconds(e.offsetX - this.startX - this.PADDINGLEFT);
-      }
-      that.isMouseDown = false;
-      this.rootDom.classList.remove("ts-move");
-      // 判断是否在移动
-      try {
-        this.onMouseDownCallback && this.onMouseDownCallback();
-      } catch (e) {}
-      // 校验当前位置
-      if (this.verifyTimeLineSite(oldPresentSeconds)) {
-        return;
-      } else {
-        this.timeLinePlay();
-      }
-    });
-    this.rootDom.addEventListener("mouseout", (e) => {
-      if (!this.timeChunkArray.length) {
-        return;
-      }
-      that.isMouseDown = false;
-      this.assistTimeLineDom.style.display = "none";
-      this.assistTimeLinePresentDom.style.display = "none";
-      this.rootDom.classList.remove("ts-move");
-    });
-    // 鼠标滑动进行缩放
-    this.rootDom.addEventListener("mousewheel", (e) => {
-      if (!this.timeChunkArray.length) {
-        return;
-      }
-      let oldAllAxisLength = that.allAxisLength;
-      let oldTimeLineLeft = this.domLeftToNumberUtils(this.timeLineDom);
-      if (e.wheelDelta > 0) {
-        if (that.wheelIndex < that.wheelIndexMap.length - 1) {
-          ++that.wheelIndex;
-          that.precision = that.wheelIndexMap[that.wheelIndex];
-          //重新初始化
-          that.initAxis(true);
-          this.zoomSetTimeSlider(oldAllAxisLength, oldTimeLineLeft, that.allAxisLength, true);
-        }
-      } else {
-        if (that.wheelIndex > 0) {
-          --that.wheelIndex;
-          that.precision = that.wheelIndexMap[that.wheelIndex];
-          //重新初始化
-          that.initAxis(true);
-          this.zoomSetTimeSlider(oldAllAxisLength, oldTimeLineLeft, that.allAxisLength, false);
-        }
-      }
-
-      // 精度为1小时需要设置left
-      if (that.precision === 3600) {
-        this.containerDom.style.left = 0;
-      }
-      // 判断时间轴left值不能大于0
-      if (that.containerDom.offsetLeft >= 0) {
-        that.containerDom.style.left = 0;
-      }
-      // 以及right值 大于0需要归0
-      if (this.allAxisLength + this.rootDom.offsetLeft <= document.body.clientWidth) {
-        this.rootDom.style.left = -this.allAxisLength + document.body.clientWidth - 2 * this.paddingLeft + "px";
-      }
-      this.setTimeLineLeft();
-    });
-    // // 增加双击事件
-    // this.rootDom.addEventListener("dblclick", (e) => {
-    //   if (!this.timeChunkArray.length) {
-    //     return;
-    //   }
-    //   console.log("双击", e.offsetX);
-    //   this.handleClick(e.offsetX);
-    // });
+  // 切换到后一天
+  nextDay() {
+    this.date.setDate(this.date.getDate() + 1);
+    this.render();
   }
 
-  /**
-   * 处理点击事件
-   * @param {number} left 鼠标点击时offsetX的值
-   */
-  handleClick(left) {
-    // 之前的值，保留计算不影响逻辑
-    let oldPresentSeconds = this.presentSeconds;
-    this.presentSeconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
-
-    // 真正的点击事件
-    let seconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
-    let timeNow = this.secondsTranslateTimeUtils(seconds);
-    try {
-      this.onClickCallback && this.onClickCallback(timeNow, this.extraInfo);
-    } catch (err) {
-      console.warn(err);
-    }
-    this.setTimeLineLeft();
+  // 更新录像数据
+  updateData(newData) {
+    this.data = newData;
+    this.render();
   }
 
-  /**
-   * 检验时间线移动后的位置
-   * @param {number} oldPresentSeconds 移动前的时间
-   * @returns {undefined | true}
-   */
-  verifyTimeLineSite(oldPresentSeconds) {
-    if (!this.timeChunkArray.length) {
-      return;
-    }
-    // 当前位置没有录像
-    let isInTimeChunk = false; // 是否再
-    let isInLastRight = this.presentSeconds > this.getTimeChunkLastEndTime();
-    for (let i = 0; i < this.timeChunkArray.length; i++) {
-      let timeArr = this.timeChunkArray[i].split("-");
-      let startTimeSecond = this.timeTranslateSecondsUtils(timeArr[0]);
-      let endTimeSecond = this.timeTranslateSecondsUtils(timeArr[1]);
-      if (startTimeSecond <= this.presentSeconds && this.presentSeconds <= endTimeSecond) {
-        isInTimeChunk = true;
-        this.curPlayTimeChunk[0] = startTimeSecond;
-        this.curPlayTimeChunk[1] = endTimeSecond;
-        this.curPlayTimeChunk[2] = i;
-        break;
-      }
-    }
-    // 判断当前时间有录像
-    if (isInTimeChunk) {
-      return;
-    }
-    // 获取下一段录像
-    if (!isInLastRight) {
-      for (let i = 0; i < this.timeChunkArray.length; i++) {
-        let timeArr = this.timeChunkArray[i].split("-");
-        let timeNextArr, nextEndTimeSecond;
-        let startTimeSecond = this.timeTranslateSecondsUtils(timeArr[0]);
-        let endTimeSecond = this.timeTranslateSecondsUtils(timeArr[1]);
-        if (i + 1 >= this.timeChunkArray.length) {
-          nextEndTimeSecond = 0;
-        } else {
-          timeNextArr = this.timeChunkArray[i + 1].split("-");
-          nextEndTimeSecond = this.timeTranslateSecondsUtils(timeNextArr[1]);
-        }
-        if (nextEndTimeSecond < this.presentSeconds && this.presentSeconds < startTimeSecond) {
-          this.presentSeconds = startTimeSecond;
-          this.curPlayTimeChunk[0] = startTimeSecond;
-          this.curPlayTimeChunk[1] = endTimeSecond;
-          this.curPlayTimeChunk[2] = i;
-          break;
-        }
-      }
-    } else {
-      // 无法获取最后一段时间
-      this.presentSeconds = oldPresentSeconds;
-      this.setTimeLineLeft();
-      return true;
-    }
-    this.setTimeLineLeft();
+  // 设置日期变更回调
+  setDateChangeCallback(callback) {
+    this.onDateChange = callback;
   }
 
-  // 拖拽后 计算当前时间
-  calCurPreseconds(x) {
-    this.presentSeconds = (-x * 60 * 60 * 24) / this.allAxisLength + this.presentSeconds;
-  }
+  calculateTimeFromOffset(offsetX) {
+    const totalHours = 24;
+    const positionRatio = offsetX / (this.timelineWidth - 160);
+    const totalSeconds = Math.round(positionRatio * totalHours * 3600);
 
-  /**
-   * 获取长度
-   * @param {number} precision 精度大小 1|5|10|30|60
-   */
-  calTimeSlider() {
-    let axisDom = this.getDomInstanceUtils(".ts-axis");
-    this.axisLength = axisDom.offsetWidth;
-    this.allAxisLength = axisDom.offsetWidth * this.precisionSetting[this.wheelIndexMap[this.wheelIndex]];
-    console.log("总长度", this.allAxisLength);
-    console.log("单个长度", this.axisLength);
-  }
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
 
-  /**
-   * 时间轴dom的展示
-   * @param {number} precision 精度大小 1|5|10|30|60
-   */
-  initTimeAxisDom(precision) {
-    this.containerDom.innerHTML = "";
-    const axisNum = this.precisionSetting[precision]; // 获取轴的数量
-    for (let i = 0; i < axisNum; i++) {
-      let div = document.createElement("div");
-      div.classList.add("ts-axis");
-      // 第一帧
-      if (i === 0) {
-        div.classList.add("ts-axis-first");
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time-first");
-        span.innerText = `00:00`;
-        div.appendChild(span);
-      }
+    const year = this.date.getFullYear();
+    const month = String(this.date.getMonth() + 1).padStart(2, "0");
+    const day = String(this.date.getDate()).padStart(2, "0");
+    const time = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-      // 特殊轴的处理 最后一轴
-      if (i === axisNum - 1) {
-        div.classList.add("ts-axis-last");
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time-last");
-        span.innerText = `24:00`;
-        div.appendChild(span);
-      }
-
-      if (i % 2 === 0 && axisNum === 24 && i !== 0) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-        span.innerText = `${i >= 10 ? i : "0" + i}:00`;
-        div.appendChild(span);
-      }
-
-      if (axisNum === 48) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-        let min = i % 2;
-        let hour = Math.floor(i / 2);
-        span.innerText = `${hour >= 10 ? hour : "0" + hour}:${min ? "30" : "00"}`;
-        div.appendChild(span);
-      }
-
-      if (axisNum === 144) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-        let time = i * 10;
-        let min = time % 60;
-        let hour = (time - min) / 60;
-        span.innerText = `${hour >= 10 ? hour : "0" + hour}:${min >= 10 ? min : "0" + min}`;
-        div.appendChild(span);
-      }
-
-      if (axisNum === 288) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-        let time = i * 5;
-        let min = time % 60;
-        let hour = (time - min) / 60;
-        span.innerText = `${hour >= 10 ? hour : "0" + hour}:${min >= 10 ? min : "0" + min}`;
-        div.appendChild(span);
-      }
-
-      if (axisNum === 1440) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-        let time = i * 1;
-        let min = time % 60;
-        let hour = (time - min) / 60;
-        span.innerText = `${hour >= 10 ? hour : "0" + hour}:${min >= 10 ? min : "0" + min}`;
-        div.appendChild(span);
-      }
-
-      if (i % 6 === 0 && axisNum === 8640 && i !== 0) {
-        let span = document.createElement("span");
-        span.classList.add("ts-axis-time");
-
-        let time = i * 10;
-        let min = (time / 60) % 60;
-
-        let hour = (Math.floor(time / 60 / 60).toFixed(2) * 100) / 100;
-        console.log(time, hour);
-        span.innerText = `${hour >= 10 ? hour : "0" + hour}:${min >= 10 ? min : "0" + min}`;
-        div.appendChild(span);
-      }
-
-      div.classList.add("ts-axis-60");
-      this.containerDom.appendChild(div);
-    }
-  }
-
-  /**
-   * 设置时间线的位置
-   */
-  setTimeLineLeft() {
-    if (!this.timeChunkArray.length) {
-      return;
-    }
-    let left = this.presentSeconds * (this.allAxisLength / this.DAYSECONDS);
-    left = left + this.domLeftToNumberUtils(this.containerDom);
-    this.timeLineDom.style.left = this.PADDINGLEFT + left + "px";
-  }
-
-  /**
-   * 缩放的时候，以时间线为中心进行，时间线相对位置不变
-   * @param {number}  oldAxisLength 旧的时间轴长度
-   * @param {number}  oldTimeLineLeft 旧的时间线left长度
-   * @param {number}  newAxisLength 新的时间轴长度
-   */
-  zoomSetTimeSlider(oldAxisLength, oldTimeLineLeft, newAxisLength) {
-    let curRootDomLeft = this.domLeftToNumberUtils(this.containerDom);
-    let left = ((oldTimeLineLeft - this.PADDINGLEFT - curRootDomLeft) / oldAxisLength) * newAxisLength - (oldTimeLineLeft - this.PADDINGLEFT);
-    this.containerDom.style.left = -left + "px";
-  }
-
-  /**
-   * 测试模拟时间线停止移动
-   */
-  timeLineStop() {
-    clearInterval(this.timer);
-    this.timer = null;
-  }
-
-  /**
-   * 测试模拟时间线开始移动
-   */
-  timeLinePlay() {
-    if (this.timer) {
-      return;
-    }
-    this.timer = setInterval(() => {
-      this.presentSeconds = this.presentSeconds + this.speed;
-      // 拖动的时候指针不滚动
-      if (this.isMouseDown) {
-        return;
-      }
-      let left = this.speed * (this.allAxisLength / this.DAYSECONDS) + this.domLeftToNumberUtils(this.timeLineDom);
-      this.setTimeLineLeft();
-
-      if (this.containerDom.offsetWidth < left) {
-        console.log("playback isRightOver");
-        this.isRightOver = true;
-      } else {
-        this.isRightOver = false;
-      }
-      this.timeNow = this.secondsTranslateTimeUtils(this.presentSeconds);
-      this.timeLinePresentDom.innerText = this.timeNow;
-      // 当段录像播放完毕  兼容处理'174252-174656-A', '173952-174253-A'
-      // +2为了临界值的判断
-      if (this.presentSeconds + 1 >= this.curPlayTimeChunk[1]) {
-        console.log("临界判断");
-        let index = this.curPlayTimeChunk[2] - 1;
-        if (index < 0) {
-          this.presentSeconds = this.presentSeconds + this.speed;
-          this.setTimeLineLeft();
-          this.timeLineStop();
-          this.playbackState = 0;
-          return;
-        }
-        let timeArr = this.timeChunkArray[index].split("-");
-        let startTimeSecond = this.timeTranslateSecondsUtils(timeArr[0]);
-        let endTimeSecond = this.timeTranslateSecondsUtils(timeArr[1]);
-        this.presentSeconds = startTimeSecond;
-        this.curPlayTimeChunk[0] = startTimeSecond;
-        this.curPlayTimeChunk[1] = endTimeSecond;
-        this.curPlayTimeChunk[2] = index;
-        this.playbackState = 0;
-        this.setTimeLineLeft();
-        this.timeNow = this.secondsTranslateTimeUtils(this.presentSeconds);
-        this.timeLinePresentDom.innerText = this.timeNow;
-      }
-    }, 1000);
-  }
-
-  /**
-   * 获取时间块最后一段的结束时间
-   */
-  getTimeChunkLastEndTime() {
-    return this.timeTranslateSecondsUtils(this.timeChunkArray[0] && this.timeChunkArray[0].split("-")[1]);
-  }
-
-  /**
-   * 获取时间块的第一段的开始时间
-   */
-  getTimeChunkFirstStartTime() {
-    return this.timeTranslateSecondsUtils(
-      this.timeChunkArray[this.timeChunkArray.length - 1] && this.timeChunkArray[this.timeChunkArray.length - 1].split("-")[0]
-    );
-  }
-
-  /**
-   * 获取时间块的第一段的结束时间
-   */
-  getTimeChunkFirstEndTime() {
-    return this.timeTranslateSecondsUtils(
-      this.timeChunkArray[this.timeChunkArray.length - 1] && this.timeChunkArray[this.timeChunkArray.length - 1].split("-")[1]
-    );
-  }
-
-  /**
-   * 展示鼠标移动时的时间线时间
-   */
-  showMouseMoveAssistTimeLine(left) {
-    let seconds = ((-this.domLeftToNumberUtils(this.containerDom) + left - this.PADDINGLEFT) * this.DAYSECONDS) / this.allAxisLength;
-    let timeNow = this.secondsTranslateTimeUtils(seconds);
-    // 开启辅助时间线
-    if (seconds >= 0 && seconds <= 60 * 60 * 24) {
-      this.assistTimeLineDom.style.display = "block";
-      this.assistTimeLinePresentDom.style.display = "block";
-    } else {
-      this.assistTimeLineDom.style.display = "none";
-      this.assistTimeLinePresentDom.style.display = "none";
-    }
-    this.assistTimeLinePresentDom.innerText = timeNow;
-    let leftPx = seconds * (this.allAxisLength / this.DAYSECONDS);
-    leftPx = leftPx + this.domLeftToNumberUtils(this.containerDom);
-    this.assistTimeLineDom.style.left = this.PADDINGLEFT + leftPx + "px";
-  }
-
-  /**
-   * 销毁组件
-   */
-  destroy() {
-    // 清理定时器
-    this.timeLineStop();
-
-    // 移除事件监听器
-    this.rootDom.removeEventListener("mousedown", this.handleMouseDown);
-    this.rootDom.removeEventListener("mousemove", this.handleMouseMove);
-    this.rootDom.removeEventListener("mouseup", this.handleMouseUp);
-    this.rootDom.removeEventListener("mouseout", this.handleMouseOut);
-    this.rootDom.removeEventListener("mousewheel", this.handleMouseWheel);
-
-    // 清理DOM引用
-    this.containerDom.innerHTML = "";
-    this.rootDom.innerHTML = "";
-    this.containerDom = null;
-    this.rootDom = null;
-
-    // 可选：清空其他相关属性
-    this.timeChunkArray = [];
-    this.curPlayTimeChunk = [];
+    return `${year}-${month}-${day} ${time}`;
   }
 }
-
-export default timeSlider;
