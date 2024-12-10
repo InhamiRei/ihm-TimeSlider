@@ -16,35 +16,14 @@
         color: #fff;
         font-family: Arial, sans-serif;
       }
-      #controls {
-        display: flex;
-        justify-content: center;
-        margin: 10px 0;
-      }
-      button {
-        margin: 0 5px;
-        padding: 10px 20px;
-        font-size: 16px;
-        background-color: #444;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #555;
-      }
-      #timeline {
+      #timeSlider {
         position: relative;
         width: 100%;
+        margin-top: 30px;
       }
     </style>
   </head>
   <body>
-    <div id="controls">
-      <button id="prev-day">Previous Day</button>
-      <span id="current-day">2024-11-17</span>
-      <button id="next-day">Next Day</button>
-    </div>
     <div id="timeSlider"></div>
     <script type="module">
       import ihm_TimeSlider from "./components/timeSlider.js";
@@ -84,19 +63,6 @@
 
       // 初始化时间轴组件
       const timeline = new ihm_TimeSlider(config);
-
-      // 设置日期变更回调
-      timeline.setDateChangeCallback((dateStr) => {
-        document.getElementById("current-day").textContent = dateStr;
-      });
-
-      // 按钮绑定
-      document.getElementById("prev-day").addEventListener("click", () => {
-        timeline.prevDay();
-      });
-      document.getElementById("next-day").addEventListener("click", () => {
-        timeline.nextDay();
-      });
     </script>
   </body>
 </html>

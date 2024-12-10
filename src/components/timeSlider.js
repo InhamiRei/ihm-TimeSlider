@@ -1,9 +1,9 @@
-import { createElement } from "../utils/common.js";
+import { createElement, getContainer } from "../utils/common.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
-    this.container = this.getContainer(config.id);
+    this.container = getContainer(config.id);
     this.date = new Date(config.curDay); // 当前显示的日期
     this.data = config.data; // 录像数据
 
@@ -19,15 +19,6 @@ export default class ihm_TimeSlider {
     this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
 
     this.render();
-  }
-
-  // 获取元素
-  getContainer(id) {
-    const container = document.getElementById(id);
-    if (!container) {
-      throw new Error(`Container ${id} not found`);
-    }
-    return container;
   }
 
   // 主渲染方法
@@ -84,7 +75,7 @@ export default class ihm_TimeSlider {
     infoContainer.innerHTML = `
       ${plusSVG()}
       ${prevDaySVG(() => this.prevDay())}
-      <span style="font-size: 14px; color: #fff;">2024-11-17</span>
+      <span style="font-size: 14px; color: #fff;">${this.date.toLocaleDateString()}</span>
       ${nextDaySVG()}
       ${minusSVG()}
     `;

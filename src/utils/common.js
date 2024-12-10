@@ -5,3 +5,12 @@ export const createElement = (tag, className, styles = {}) => {
   Object.assign(element.style, styles);
   return element;
 };
+
+// 获取元素
+export const getContainer = (id) => {
+  const container = document.getElementById(id);
+  if (!container) {
+    throw new Error(`Container ${id} not found`);
+  }
+  return container;
+};
