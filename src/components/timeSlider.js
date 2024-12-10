@@ -1,4 +1,4 @@
-import { createElement, getContainer } from "../utils/common.js";
+import { createElement, getContainer, createScale, createTimeBlocks } from "../utils/common.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
@@ -11,8 +11,11 @@ export default class ihm_TimeSlider {
 
     this.trackHeight = 25; // 每条轨道的高度
     this.trackGap = 0; // 每条轨道的间隔
-    this.timelineWidth = this.container.offsetWidth - this.padding.left - this.padding.right;
+    this.timelineWidth = this.container.offsetWidth - this.padding.left - this.padding.right - 2;
     this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
+
+    // 刻度时间，默认是用小时作为单位，则刻度就会显示00:00, 01:00, 02:00, ... 24:00
+    this.timeScale = 48;
 
     this.onDateChange = null; // 日期变更回调
     this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
@@ -66,6 +69,7 @@ export default class ihm_TimeSlider {
     const infoContainer = createElement("div", "ihm-timeSlider-topbarContainer-info", {
       position: "relative",
       width: "160px",
+      minWidth: "160px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-around",
@@ -81,54 +85,116 @@ export default class ihm_TimeSlider {
     `;
     topbarContainer.appendChild(infoContainer);
 
-    const totalHours = 24;
-
-    const timelineContainer = createElement("div", "ihm-timeSlider-topbarContainer-timeline", {
+    // 外部容器
+    const dragContainer = createElement("div", "ihm-timeSlider-dragContainer", {
       position: "relative",
-      flexGrow: "1",
+      overflow: "hidden", // 隐藏超出的内容
+      flexGrow: 1,
+      height: "100%",
     });
 
-    for (let i = 0; i <= totalHours; i++) {
-      const x = (i / totalHours) * (this.timelineWidth - 160);
+    const timelineContainer = createElement("div", "ihm-timeSlider-topbarContainer-timeline", {
+      position: "absolute",
+      display: "flex",
+      alignItems: "center",
+      height: "100%",
+      left: "0",
+      top: "0",
+    });
 
-      if (i !== 0 && i !== 24) {
-        const line = createElement("div", "", {
-          position: "absolute",
-          left: `${x}px`,
-          bottom: "0",
-          height: "7px",
-          width: "1px",
-          backgroundColor: "#888",
-        });
+    const scaleArr = createScale(this.timeScale);
 
-        timelineContainer.appendChild(line);
-      }
+    console.log("scaleArr", scaleArr);
 
-      let labelOffset = -15;
-      if (i === 0) labelOffset = 3;
-      if (i === 24) labelOffset = -35;
+    for (let i = 0; i <= this.timeScale; i++) {
+      let x = (1 / this.timeScale) * (this.timelineWidth - 160);
+      if (x < 50) x = 50;
 
-      const label = createElement("div", "", {
-        position: "absolute",
-        left: `${x + labelOffset}px`,
-        bottom: "10px",
+      const scaleBlock = createElement("div", "", {
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        // 如果是最后一个宽度为1
+        width: i === this.timeScale ? "1px" : `${x}px`,
+        height: "100%",
+        backgroundColor: "red",
         color: "#fff",
         fontSize: "12px",
       });
 
-      label.textContent = i >= 10 ? `${i}:00` : `0${i}:00`;
+      // 根据条件设置 margin-left
+      const marginLeft = i === 0 ? 0 : i === this.timeScale ? -28 : -15;
 
-      timelineContainer.appendChild(label);
+      scaleBlock.innerHTML = `
+        <span style="user-select: none; margin-left: ${marginLeft}px;">${scaleArr[i]}</span>
+        <div style="width: 1px; height: 4px; background-color: #fff; position: absolute; left: 0; bottom: 0;"></div>
+      `;
+
+      timelineContainer.appendChild(scaleBlock);
     }
 
-    topbarContainer.appendChild(timelineContainer);
+    // 添加拖动事件监听器
+    let isDragging = false;
+    let startX = 0;
+    let currentLeft = 0;
+    let velocity = 0;
+    let lastDeltaX = 0;
+
+    const updatePosition = () => {
+      if (!isDragging) return;
+
+      const newLeft = currentLeft + velocity;
+      const maxLeft = 0;
+      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+
+      // 应用限制并更新位置
+      currentLeft = Math.min(maxLeft, Math.max(minLeft, newLeft));
+      timelineContainer.style.left = `${currentLeft}px`;
+
+      // 减速效果
+      velocity *= 0.9;
+      if (Math.abs(velocity) > 0.1) {
+        requestAnimationFrame(updatePosition);
+      }
+    };
+
+    dragContainer.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      lastDeltaX = 0;
+      dragContainer.style.cursor = "grabbing";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - startX;
+      velocity = deltaX - lastDeltaX; // 计算加速度
+      currentLeft += deltaX;
+      startX = e.clientX;
+      lastDeltaX = deltaX;
+
+      const maxLeft = 0;
+      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+      currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
+      timelineContainer.style.left = `${currentLeft}px`;
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (!isDragging) return;
+
+      isDragging = false;
+      requestAnimationFrame(updatePosition); // 开始惯性滑动
+    });
+
+    dragContainer.appendChild(timelineContainer);
+    topbarContainer.appendChild(dragContainer);
 
     return topbarContainer;
   }
 
   // 创建录像轨道
   renderTracks(recordingsPerTrack, totalTracks) {
-    const totalHours = 24;
     const tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
       position: "relative",
     });
@@ -146,6 +212,7 @@ export default class ihm_TimeSlider {
 
       const infoContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-info", {
         width: "160px",
+        minWidth: "160px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -160,42 +227,20 @@ export default class ihm_TimeSlider {
       const sliderContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-slider", {
         flexGrow: "1",
         position: "relative",
+        display: "flex",
       });
 
-      recordings.forEach(({ startTime, endTime }) => {
-        const startDate = new Date(startTime);
-        const endDate = new Date(endTime);
+      console.log("recordings", recordings);
 
-        const startHour = startDate.getHours() + startDate.getMinutes() / 60;
-        const endHour = endDate.getHours() + endDate.getMinutes() / 60;
+      const scale = 50; // 30 minutes = 50px
+      const timeBlocks = createTimeBlocks(recordings, scale);
 
-        const xStart = (startHour / totalHours) * (this.timelineWidth - 160);
-        const width = ((endHour - startHour) / totalHours) * (this.timelineWidth - 160);
-
+      timeBlocks.forEach((block) => {
+        console.log("block", block);
         const recordingSegment = createElement("div", null, {
-          position: "absolute",
-          left: `${xStart}px`,
-          top: "0",
-          height: `${this.trackHeight}px`,
-          width: `${width}px`,
-          backgroundColor: "rgba(0, 128, 255, 0.7)",
-        });
-
-        // 双击事件
-        recordingSegment.addEventListener("dblclick", (event) => {
-          if (this.onSegmentDblClick) {
-            const time = this.calculateTimeFromOffset(event.offsetX);
-            this.onSegmentDblClick({ time, event });
-          }
-        });
-
-        // 右键事件
-        recordingSegment.addEventListener("contextmenu", (event) => {
-          event.preventDefault();
-          if (this.onSegmentContextMenu) {
-            const time = this.calculateTimeFromOffset(event.offsetX);
-            this.onSegmentContextMenu({ time, event });
-          }
+          height: "100%",
+          width: `${block.width}px`,
+          backgroundColor: `${block.color}`,
         });
 
         sliderContainer.appendChild(recordingSegment);
@@ -257,22 +302,5 @@ export default class ihm_TimeSlider {
   // 设置日期变更回调
   setDateChangeCallback(callback) {
     this.onDateChange = callback;
-  }
-
-  calculateTimeFromOffset(offsetX) {
-    const totalHours = 24;
-    const positionRatio = offsetX / (this.timelineWidth - 160);
-    const totalSeconds = Math.round(positionRatio * totalHours * 3600);
-
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    const year = this.date.getFullYear();
-    const month = String(this.date.getMonth() + 1).padStart(2, "0");
-    const day = String(this.date.getDate()).padStart(2, "0");
-    const time = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-
-    return `${year}-${month}-${day} ${time}`;
   }
 }
