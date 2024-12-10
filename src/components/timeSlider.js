@@ -1,4 +1,5 @@
 import { createElement } from "../utils/common.js";
+import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
@@ -56,6 +57,9 @@ export default class ihm_TimeSlider {
     if (this.onDateChange) {
       this.onDateChange(currentDateStr);
     }
+
+    // 绑定事件
+    this.bindingEvents();
   }
 
   // 创建时间刻度
@@ -78,7 +82,11 @@ export default class ihm_TimeSlider {
     });
 
     infoContainer.innerHTML = `
-    <span style="font-size: 14px; color: #fff;">2024-11-17</span>
+      ${plusSVG()}
+      ${prevDaySVG(() => this.prevDay())}
+      <span style="font-size: 14px; color: #fff;">2024-11-17</span>
+      ${nextDaySVG()}
+      ${minusSVG()}
     `;
     topbarContainer.appendChild(infoContainer);
 
@@ -208,16 +216,45 @@ export default class ihm_TimeSlider {
     return tracksContainer;
   }
 
+  // 绑定事件
+  bindingEvents() {
+    const eventMap = [
+      { selector: ".ihm-timeSlider-plus-svg", handler: () => this.plusTimeLine() },
+      { selector: ".ihm-timeSlider-prev-svg", handler: () => this.prevDay() },
+      { selector: ".ihm-timeSlider-next-svg", handler: () => this.nextDay() },
+      { selector: ".ihm-timeSlider-minus-svg", handler: () => this.minusTimeLine() },
+    ];
+
+    eventMap.forEach(({ selector, handler }) => {
+      const element = this.container.querySelector(selector);
+      if (element) {
+        element.addEventListener("click", handler);
+      }
+    });
+  }
+
   // 切换到前一天
   prevDay() {
+    console.log("prevDay");
     this.date.setDate(this.date.getDate() - 1);
     this.render();
   }
 
   // 切换到后一天
   nextDay() {
+    console.log("nextDay");
     this.date.setDate(this.date.getDate() + 1);
     this.render();
+  }
+
+  // 放大时间轴
+  plusTimeLine() {
+    console.log("plusTimeLine");
+  }
+
+  // 缩放时间轴
+  minusTimeLine() {
+    console.log("minusTimeLine");
   }
 
   // 更新录像数据

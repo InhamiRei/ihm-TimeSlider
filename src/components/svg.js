@@ -1,6 +1,7 @@
 // 放大刻度轴的图标
-export const plusSVG = (props) => (
+export const plusSVG = () => `
   <svg
+    class="ihm-timeSlider-plus-svg"
     t="1733727315169"
     class="icon"
     viewBox="0 0 1024 1024"
@@ -9,7 +10,6 @@ export const plusSVG = (props) => (
     p-id="1106"
     width="18"
     height="18"
-    {...props}
   >
     <title>放大刻度轴</title>
     <path
@@ -23,11 +23,12 @@ export const plusSVG = (props) => (
       fill="#fff"
     ></path>
   </svg>
-);
+`;
 
 // 前一天的图标
-export const prevDaySVG = (props) => (
+export const prevDaySVG = (func) => `
   <svg
+    class="ihm-timeSlider-prev-svg"
     t="1733725745183"
     class="icon"
     viewBox="0 0 1024 1024"
@@ -36,7 +37,6 @@ export const prevDaySVG = (props) => (
     p-id="1644"
     width="18"
     height="18"
-    {...props}
   >
     <title>前一天</title>
     <path
@@ -55,11 +55,12 @@ export const prevDaySVG = (props) => (
       p-id="1647"
     ></path>
   </svg>
-);
+`;
 
 // 后一天的图标
-export const nextDaySVG = (props) => (
+export const nextDaySVG = () => `
   <svg
+    class="ihm-timeSlider-next-svg"
     t="1733725745183"
     class="icon"
     viewBox="0 0 1024 1024"
@@ -69,7 +70,6 @@ export const nextDaySVG = (props) => (
     width="18"
     height="18"
     style="transform:rotate(180deg);"
-    {...props}
   >
     <title>后一天</title>
     <path
@@ -88,11 +88,12 @@ export const nextDaySVG = (props) => (
       p-id="1647"
     ></path>
   </svg>
-);
+`;
 
 // 缩小刻度轴
-export const minusSVG = (props) => (
+export const minusSVG = () => `
   <svg
+    class="ihm-timeSlider-minus-svg"
     t="1733727410968"
     class="icon"
     viewBox="0 0 1024 1024"
@@ -101,7 +102,6 @@ export const minusSVG = (props) => (
     p-id="1341"
     width="18"
     height="18"
-    {...props}
   >
     <title>缩小刻度轴</title>
     <path
@@ -115,4 +115,4 @@ export const minusSVG = (props) => (
       fill="#fff"
     ></path>
   </svg>
-);
+`;
