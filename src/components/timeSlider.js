@@ -1,4 +1,4 @@
-import { createElement, getContainer, createScale, createTimeBlocks } from "../utils/common.js";
+import { createElement, getContainer, createScale, createTimeBlocks, calculateTimeFromPosition } from "../utils/common.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
@@ -15,7 +15,18 @@ export default class ihm_TimeSlider {
     this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
 
     // 刻度时间，默认是用小时作为单位，则刻度就会显示00:00, 01:00, 02:00, ... 24:00
-    this.timeScale = 48;
+    this.scaleTime = 24;
+    // 刻度宽度，默认是50px
+    this.scaleWidth = 50;
+    // 刻度间隔，默认是30分钟
+    this.scaleInterval = 60;
+
+    this.scaleMap = {
+      24: 60, // 1小时
+      48: 30, // 30分钟
+      288: 5, // 5分钟
+      1440: 1, // 1分钟
+    };
 
     this.onDateChange = null; // 日期变更回调
     this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
@@ -102,20 +113,24 @@ export default class ihm_TimeSlider {
       top: "0",
     });
 
-    const scaleArr = createScale(this.timeScale);
+    const scaleArr = createScale(this.scaleTime, this.scaleInterval);
 
-    console.log("scaleArr", scaleArr);
+    // console.log("scaleArr", scaleArr);
 
-    for (let i = 0; i <= this.timeScale; i++) {
-      let x = (1 / this.timeScale) * (this.timelineWidth - 160);
-      if (x < 50) x = 50;
+    for (let i = 0; i <= this.scaleTime; i++) {
+      let x = (1 / this.scaleTime) * (this.timelineWidth - 160);
+      if (x > 50) {
+        this.scaleWidth = x;
+      } else {
+        x = this.scaleWidth;
+      }
 
       const scaleBlock = createElement("div", "", {
         position: "relative",
         display: "flex",
         alignItems: "center",
         // 如果是最后一个宽度为1
-        width: i === this.timeScale ? "1px" : `${x}px`,
+        width: i === this.scaleTime ? "1px" : `${x}px`,
         height: "100%",
         backgroundColor: "red",
         color: "#fff",
@@ -123,7 +138,7 @@ export default class ihm_TimeSlider {
       });
 
       // 根据条件设置 margin-left
-      const marginLeft = i === 0 ? 0 : i === this.timeScale ? -28 : -15;
+      const marginLeft = i === 0 ? 0 : i === this.scaleTime ? -28 : -15;
 
       scaleBlock.innerHTML = `
         <span style="user-select: none; margin-left: ${marginLeft}px;">${scaleArr[i]}</span>
@@ -189,18 +204,42 @@ export default class ihm_TimeSlider {
         top: "0",
       });
 
-      console.log("recordings", recordings);
+      // console.log("recordings", recordings);
 
-      const scale = 50; // 30 minutes = 50px
-      const timeBlocks = createTimeBlocks(recordings, scale);
+      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleInterval);
 
       timeBlocks.forEach((block) => {
-        console.log("block", block);
+        // console.log("block", block);
         const recordingSegment = createElement("div", null, {
           height: "100%",
           width: `${block.width}px`,
           backgroundColor: `${block.color}`,
         });
+
+        // 只有蓝色的滑块需要绑定绑定事件
+        if (block.color === "blue") {
+          recordingSegment.addEventListener("dblclick", (event) => {
+            // 滑块容器距离左侧的距离
+            const container_left = sliderContainer.getBoundingClientRect().left;
+            // 鼠标点击距离左侧的距离
+            const click_left = event.clientX;
+            // 蓝色滑块距离左侧的距离 这里并不需要取拖拽的left，因为拖拽后相应的滑块容器距离也会减少
+            const block_left = click_left - container_left;
+
+            console.log("container_left", container_left);
+            console.log("click_left", click_left);
+            console.log("block_left", block_left);
+
+            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleInterval);
+
+            console.log("对应时间", time);
+
+            // 触发双击事件回调
+            if (this.onSegmentDblClick) {
+              this.onSegmentDblClick({ time, event });
+            }
+          });
+        }
 
         sliderContainer.appendChild(recordingSegment);
       });
@@ -215,10 +254,10 @@ export default class ihm_TimeSlider {
   // 绑定事件
   bindingEvents() {
     const eventMap = [
-      { selector: ".ihm-timeSlider-plus-svg", handler: () => this.plusTimeLine() },
+      { selector: ".ihm-timeSlider-plus-svg", handler: () => this.adjustTimeLine("in") },
       { selector: ".ihm-timeSlider-prev-svg", handler: () => this.prevDay() },
       { selector: ".ihm-timeSlider-next-svg", handler: () => this.nextDay() },
-      { selector: ".ihm-timeSlider-minus-svg", handler: () => this.minusTimeLine() },
+      { selector: ".ihm-timeSlider-minus-svg", handler: () => this.adjustTimeLine("out") },
     ];
 
     eventMap.forEach(({ selector, handler }) => {
@@ -314,14 +353,31 @@ export default class ihm_TimeSlider {
     this.render();
   }
 
-  // 放大时间轴
-  plusTimeLine() {
-    console.log("plusTimeLine");
-  }
+  /**
+   * 调整时间轴的缩放级别
+   * @param {string} direction - 调整方向，"in" 表示放大，"out" 表示缩小
+   */
+  adjustTimeLine(direction) {
+    const scales = Object.keys(this.scaleMap)
+      .map(Number)
+      .sort((a, b) => a - b); // 获取所有刻度并排序
+    const currentIndex = scales.indexOf(this.scaleTime); // 找到当前刻度的索引
 
-  // 缩放时间轴
-  minusTimeLine() {
-    console.log("minusTimeLine");
+    if (direction === "in" && currentIndex < scales.length - 1) {
+      // 放大：切换到下一个更大的刻度
+      this.scaleTime = scales[currentIndex + 1];
+      this.scaleInterval = this.scaleMap[this.scaleTime]; // 更新刻度间隔
+      console.log("Zoomed In:", this.scaleTime, this.scaleInterval);
+      this.render();
+    } else if (direction === "out" && currentIndex > 0) {
+      // 缩小：切换到上一个更小的刻度
+      this.scaleTime = scales[currentIndex - 1];
+      this.scaleInterval = this.scaleMap[this.scaleTime]; // 更新刻度间隔
+      console.log("Zoomed Out:", this.scaleTime, this.scaleInterval);
+      this.render();
+    } else {
+      console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
+    }
   }
 
   // 更新录像数据
