@@ -86,7 +86,7 @@ export default class ihm_TimeSlider {
     topbarContainer.appendChild(infoContainer);
 
     // 外部容器
-    const dragContainer = createElement("div", "ihm-timeSlider-dragContainer", {
+    const dragContainer = createElement("div", "ihm-timeSlider-topbarContainer-dragContainer", {
       position: "relative",
       overflow: "hidden", // 隐藏超出的内容
       flexGrow: 1,
@@ -133,62 +133,10 @@ export default class ihm_TimeSlider {
       timelineContainer.appendChild(scaleBlock);
     }
 
-    // 添加拖动事件监听器
-    let isDragging = false;
-    let startX = 0;
-    let currentLeft = 0;
-    let velocity = 0;
-    let lastDeltaX = 0;
-
-    const updatePosition = () => {
-      if (!isDragging) return;
-
-      const newLeft = currentLeft + velocity;
-      const maxLeft = 0;
-      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
-
-      // 应用限制并更新位置
-      currentLeft = Math.min(maxLeft, Math.max(minLeft, newLeft));
-      timelineContainer.style.left = `${currentLeft}px`;
-
-      // 减速效果
-      velocity *= 0.9;
-      if (Math.abs(velocity) > 0.1) {
-        requestAnimationFrame(updatePosition);
-      }
-    };
-
-    dragContainer.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      startX = e.clientX;
-      lastDeltaX = 0;
-      dragContainer.style.cursor = "grabbing";
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-
-      const deltaX = e.clientX - startX;
-      velocity = deltaX - lastDeltaX; // 计算加速度
-      currentLeft += deltaX;
-      startX = e.clientX;
-      lastDeltaX = deltaX;
-
-      const maxLeft = 0;
-      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
-      currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
-      timelineContainer.style.left = `${currentLeft}px`;
-    });
-
-    document.addEventListener("mouseup", () => {
-      if (!isDragging) return;
-
-      isDragging = false;
-      requestAnimationFrame(updatePosition); // 开始惯性滑动
-    });
-
     dragContainer.appendChild(timelineContainer);
     topbarContainer.appendChild(dragContainer);
+    // 调用拖拽绑定逻辑
+    this.bindDragEvents(dragContainer, timelineContainer);
 
     return topbarContainer;
   }
@@ -224,10 +172,21 @@ export default class ihm_TimeSlider {
       `;
       trackRow.appendChild(infoContainer);
 
-      const sliderContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-slider", {
-        flexGrow: "1",
+      // 外部拖拽容器
+      const dragContainer = createElement("div", "ihm-timeSlider-trackContainer-dragContainer", {
         position: "relative",
+        overflow: "hidden", // 隐藏超出的内容
+        flexGrow: 1,
+        height: "100%",
+      });
+
+      const sliderContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-slider", {
+        position: "absolute",
         display: "flex",
+        alignItems: "center",
+        height: "100%",
+        left: "0",
+        top: "0",
       });
 
       console.log("recordings", recordings);
@@ -245,7 +204,8 @@ export default class ihm_TimeSlider {
 
         sliderContainer.appendChild(recordingSegment);
       });
-      trackRow.appendChild(sliderContainer);
+      dragContainer.appendChild(sliderContainer);
+      trackRow.appendChild(dragContainer);
       tracksContainer.appendChild(trackRow);
     });
 
@@ -266,6 +226,77 @@ export default class ihm_TimeSlider {
       if (element) {
         element.addEventListener("click", handler);
       }
+    });
+  }
+
+  // 拖拽绑定
+  bindDragEvents(dragContainer, timelineContainer) {
+    let isDragging = false;
+    let startX = 0;
+    let currentLeft = 0;
+    let velocity = 0;
+    let lastDeltaX = 0;
+
+    const syncSliderPositions = () => {
+      // 找到页面中所有classname为 "ihm-timeSlider-trackContainer-trackRow-slider" 的元素
+      const sliders = document.querySelectorAll(".ihm-timeSlider-trackContainer-trackRow-slider");
+      sliders.forEach((slider) => {
+        slider.style.left = `${currentLeft}px`;
+      });
+    };
+
+    const updatePosition = () => {
+      if (!isDragging) return;
+
+      const newLeft = currentLeft + velocity;
+      const maxLeft = 0;
+      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+
+      // 应用限制并更新位置
+      currentLeft = Math.min(maxLeft, Math.max(minLeft, newLeft));
+      timelineContainer.style.left = `${currentLeft}px`;
+
+      // 同步更新其他元素的位置
+      syncSliderPositions();
+
+      // 减速效果
+      velocity *= 0.9;
+      if (Math.abs(velocity) > 0.1) {
+        requestAnimationFrame(updatePosition);
+      }
+    };
+
+    dragContainer.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      lastDeltaX = 0;
+      dragContainer.style.cursor = "grabbing";
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - startX;
+      velocity = deltaX - lastDeltaX; // 计算加速度
+      currentLeft += deltaX;
+      startX = e.clientX;
+      lastDeltaX = deltaX;
+
+      const maxLeft = 0;
+      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+      currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
+      timelineContainer.style.left = `${currentLeft}px`;
+
+      // 同步更新其他元素的位置
+      syncSliderPositions();
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (!isDragging) return;
+
+      isDragging = false;
+      requestAnimationFrame(updatePosition); // 开始惯性滑动
+      dragContainer.style.cursor = "default";
     });
   }
 
