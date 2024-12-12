@@ -18,7 +18,7 @@ export default class ihm_TimeSlider {
     this.scaleTime = 24;
     // 刻度宽度，默认是50px
     this.scaleWidth = 50;
-    // 刻度间隔，默认是30分钟
+    // 刻度间隔，默认是60分钟
     this.scaleInterval = 60;
 
     this.scaleMap = {

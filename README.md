@@ -1,3 +1,17 @@
-##
+<h1>ihm-TimeSlider</h1>
 
-目前还在更新，后续完善 README.md
+English | [简体中文](README-zh_CN.md)
+
+## ✨ Features
+
+## ✨ Configuration
+
+## ✨ Usage
+
+### ① Direct Usage
+
+### ② Using as an npm package
+
+## ✨ Development
+
+## ✨ Pictures
