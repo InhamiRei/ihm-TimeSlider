@@ -104,11 +104,19 @@ export const createTimeBlocks = (timeRanges, scaleWidth, scaleInterval) => {
 };
 
 /**
- * 计算点击位置对应的时间
- * @param {number} blockLeft - 点击位置相对于滑块容器的左侧距离 (px)
- * @param {number} scaleWidth - 每个单位的像素值 (px)，例如 50px
- * @param {number} scaleInterval - 每个单位的时间值 (分钟)，例如 30分钟
- * @returns {string} 格式化的时间字符串，例如 "02:30"
+ * 根据滑块位置计算对应的时间
+ * @function
+ * @param {number} blockLeft - 点击位置距离滑块容器左侧的像素值 (px)
+ * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
+ * @param {number} scaleInterval - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @returns {string} 格式化的时间字符串，格式为 "HH:MM"，例如 "02:30"
+ * @description
+ * - 该函数通过滑块位置计算出总时间，并将其格式化为小时和分钟的形式。
+ * - 总分钟数由位置 (blockLeft) 与单位宽度 (scaleWidth) 和时间间隔 (scaleInterval) 计算得出。
+ * - 返回结果始终以 "HH:MM" 格式显示。
+ *
+ * @example
+ * calculateTimeFromPosition(150, 50, 60); // 返回 "03:00"
  */
 export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleInterval) => {
   // 计算总分钟数
@@ -120,4 +128,30 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleInterval) 
 
   // 返回格式化时间
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+};
+
+/**
+ * 根据时间计算滑块位置
+ * @function
+ * @param {string} time - 时间字符串，格式为 "HH:MM"，例如 "02:30"
+ * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
+ * @param {number} scaleInterval - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @returns {number} 滑块位置距离容器左侧的像素值 (px)
+ * @description
+ * - 该函数通过时间字符串解析总分钟数，并计算对应的滑块位置。
+ * - 总分钟数由时间字符串解析为小时和分钟并求和得出。
+ * - 返回值为滑块距离容器左侧的像素值。
+ *
+ * @example
+ * calculatePositionFromTime("03:00", 50, 60); // 返回 150
+ */
+export const calculatePositionFromTime = (time, scaleWidth, scaleInterval) => {
+  // 将时间字符串 (hh:mm) 转换为总分钟数
+  const [hours, minutes] = time.split(":").map(Number);
+  const totalMinutes = hours * 60 + minutes;
+
+  // 计算 blockLeft
+  const blockLeft = (totalMinutes * scaleWidth) / scaleInterval;
+
+  return blockLeft;
 };

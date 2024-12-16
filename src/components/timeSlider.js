@@ -1,4 +1,4 @@
-import { createElement, getContainer, createScale, createTimeBlocks, calculateTimeFromPosition } from "../utils/common.js";
+import { createElement, getContainer, createScale, createTimeBlocks, calculateTimeFromPosition, calculatePositionFromTime } from "../utils/common.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
@@ -31,6 +31,10 @@ export default class ihm_TimeSlider {
     this.onDateChange = null; // 日期变更回调
     this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
     this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
+
+    this.tracksContainer = null; // 轨道容器
+
+    this.tracksInfoArr = [];
 
     this.render();
   }
@@ -158,7 +162,18 @@ export default class ihm_TimeSlider {
 
   // 创建录像轨道
   renderTracks(recordingsPerTrack, totalTracks) {
-    const tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
+    // 防止内存泄漏
+    if (this.tracksContainer) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine && track.markerLine.movementInterval) {
+          clearInterval(track.markerLine.movementInterval);
+          track.markerLine.movementInterval = null;
+        }
+      }
+    }
+
+    this.tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
       position: "relative",
     });
 
@@ -204,7 +219,39 @@ export default class ihm_TimeSlider {
         top: "0",
       });
 
-      // console.log("recordings", recordings);
+      // 在 renderTracks 中，为每个轨道添加黄色刻度线
+      const markerLine = createElement("div", "ihm-timeSlider-markerLine", {
+        position: "absolute",
+        height: "100%",
+        width: "2px",
+        backgroundColor: "yellow",
+        left: "0", // 初始位置
+        top: "0",
+        zIndex: "2", // 确保在滑块上层
+        pointerEvents: "none", // 防止事件阻挡
+      });
+
+      sliderContainer.appendChild(markerLine);
+      // 保存黄色刻度线引用到每个轨道
+      trackRow.markerLine = markerLine;
+
+      console.log("sliderContainer", sliderContainer);
+      if (this.tracksInfoArr.length !== 0) {
+        const info = this.tracksInfoArr[trackIndex];
+        console.log("info", info);
+
+        if (info) {
+          const { time: infoTime, criticalTime: infoCriticalTime } = info;
+          const newLeft = calculatePositionFromTime(infoTime, this.scaleWidth, this.scaleInterval);
+          const markerLine = trackRow.markerLine;
+          const newCritical = calculatePositionFromTime(infoCriticalTime, this.scaleWidth, this.scaleInterval);
+
+          markerLine.style.left = `${newLeft}px`;
+
+          // 启动黄色刻度线的移动
+          this.startMarkerMovement(markerLine, newCritical);
+        }
+      }
 
       const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleInterval);
 
@@ -226,13 +273,24 @@ export default class ihm_TimeSlider {
             // 蓝色滑块距离左侧的距离 这里并不需要取拖拽的left，因为拖拽后相应的滑块容器距离也会减少
             const block_left = click_left - container_left;
 
-            console.log("container_left", container_left);
-            console.log("click_left", click_left);
-            console.log("block_left", block_left);
+            // console.log("container_left", container_left);
+            // console.log("click_left", click_left);
+            // console.log("block_left", block_left);
 
             const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleInterval);
 
             console.log("对应时间", time);
+
+            // 获取当前轨道的黄色刻度线，并移动到点击位置
+            const markerLine = trackRow.markerLine;
+            markerLine.style.left = `${block_left}px`;
+
+            // 计算临界宽度
+            const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
+            const critical = blueBlock_width + blueBlock_left - container_left;
+
+            // 启动黄色刻度线的移动
+            this.startMarkerMovement(markerLine, critical);
 
             // 触发双击事件回调
             if (this.onSegmentDblClick) {
@@ -243,12 +301,50 @@ export default class ihm_TimeSlider {
 
         sliderContainer.appendChild(recordingSegment);
       });
+
       dragContainer.appendChild(sliderContainer);
       trackRow.appendChild(dragContainer);
-      tracksContainer.appendChild(trackRow);
+      this.tracksContainer.appendChild(trackRow);
     });
 
-    return tracksContainer;
+    return this.tracksContainer;
+  }
+
+  // 黄色刻度线开始移动
+  startMarkerMovement(markerLine, critical) {
+    // 清除已有的定时器，防止重复启动（虽然我在前面已经清理过了）
+    if (markerLine.movementInterval) {
+      clearInterval(markerLine.movementInterval);
+      markerLine.movementInterval = null;
+    }
+
+    markerLine.movementInterval = setInterval(() => {
+      const currentLeft = parseInt(markerLine.style.left, 10) || 0;
+      const newLeft = currentLeft + this.scaleWidth / this.scaleInterval; // 每秒移动
+
+      if (newLeft >= critical) {
+        clearInterval(markerLine.movementInterval); // 停止移动
+        markerLine.style.left = `${critical}px`;
+        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleInterval);
+        markerLine.info = {
+          time,
+          critical,
+          left: critical,
+          criticalTime: calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval),
+        };
+        console.log("Reached end of track", time);
+      } else {
+        markerLine.style.left = `${newLeft}px`;
+        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleInterval);
+        markerLine.info = {
+          time,
+          critical,
+          left: newLeft,
+          criticalTime: calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval),
+        };
+        console.log("time", time);
+      }
+    }, 2000); // 每秒更新
   }
 
   // 绑定事件
@@ -363,6 +459,15 @@ export default class ihm_TimeSlider {
       .sort((a, b) => a - b); // 获取所有刻度并排序
     const currentIndex = scales.indexOf(this.scaleTime); // 找到当前刻度的索引
 
+    if (this.tracksContainer) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine) {
+          this.tracksInfoArr.push(track.markerLine.info);
+        }
+      }
+    }
+
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
       this.scaleTime = scales[currentIndex + 1];
@@ -379,6 +484,9 @@ export default class ihm_TimeSlider {
       console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
     }
   }
+
+  // 黄色刻度线计算并移动
+  calculateAndMoveMarkerLine() {}
 
   // 更新录像数据
   updateData(newData) {
