@@ -236,7 +236,7 @@ export default class ihm_TimeSlider {
       // 保存黄色刻度线引用到每个轨道
       trackRow.markerLine = markerLine;
 
-      // console.log("sliderContainer", sliderContainer);
+      // 重置黄色刻度线的位置并启动移动
       if (this.tracksInfoArr.length !== 0) {
         const info = this.tracksInfoArr[trackIndex];
         console.log("info", info);
@@ -250,14 +250,14 @@ export default class ihm_TimeSlider {
           markerLine.style.left = `${newLeft}px`;
 
           // 启动黄色刻度线的移动
-          this.startMarkerMovement(markerLine, newCritical);
+          this.startMarkerMovement(markerLine, newCritical, infoCriticalTime);
         }
       }
 
       const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleInterval);
 
       timeBlocks.forEach((block) => {
-        console.log("block", block);
+        // console.log("block", block);
         const recordingSegment = createElement("div", null, {
           height: "100%",
           width: `${block.width}px`,
@@ -289,9 +289,10 @@ export default class ihm_TimeSlider {
             // 计算临界宽度
             const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
             const critical = blueBlock_width + blueBlock_left - container_left;
+            const criticalTime = block.end;
 
             // 启动黄色刻度线的移动
-            this.startMarkerMovement(markerLine, critical);
+            this.startMarkerMovement(markerLine, critical, criticalTime);
 
             // 触发双击事件回调
             if (this.onSegmentDblClick) {
@@ -312,7 +313,7 @@ export default class ihm_TimeSlider {
   }
 
   // 黄色刻度线开始移动
-  startMarkerMovement(markerLine, critical) {
+  startMarkerMovement(markerLine, critical, criticalTime) {
     // 清除已有的定时器，防止重复启动（虽然我在前面已经清理过了）
     if (markerLine.movementInterval) {
       clearInterval(markerLine.movementInterval);
@@ -326,12 +327,10 @@ export default class ihm_TimeSlider {
       if (newLeft >= critical) {
         clearInterval(markerLine.movementInterval); // 停止移动
         markerLine.style.left = `${critical}px`;
-        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleInterval);
+        const time = calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval);
         markerLine.info = {
           time,
-          critical,
-          left: critical,
-          criticalTime: calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval),
+          criticalTime,
         };
         console.log("Reached end of track", time);
       } else {
@@ -339,13 +338,11 @@ export default class ihm_TimeSlider {
         const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleInterval);
         markerLine.info = {
           time,
-          critical,
-          left: newLeft,
-          criticalTime: calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval),
+          criticalTime,
         };
         console.log("time", time);
       }
-    }, 2000); // 每秒更新
+    }, 1000); // 每秒更新
   }
 
   // 绑定事件
@@ -460,6 +457,7 @@ export default class ihm_TimeSlider {
       .sort((a, b) => a - b); // 获取所有刻度并排序
     const currentIndex = scales.indexOf(this.scaleTime); // 找到当前刻度的索引
 
+    this.tracksInfoArr = [];
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
         const track = this.tracksContainer.children[i];
@@ -468,6 +466,8 @@ export default class ihm_TimeSlider {
         }
       }
     }
+
+    console.log("tracksInfoArr", this.tracksInfoArr);
 
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
