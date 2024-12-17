@@ -1,4 +1,5 @@
-import { createElement, getContainer, createScale, createTimeBlocks, calculateTimeFromPosition, calculatePositionFromTime } from "../utils/common.js";
+import { createElement, getContainer, createScale, createTimeBlocks } from "../utils/common.js";
+import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
@@ -34,7 +35,7 @@ export default class ihm_TimeSlider {
 
     this.tracksContainer = null; // 轨道容器
 
-    this.tracksInfoArr = [];
+    this.tracksInfoArr = []; // 轨道信息数组，用来还原黄色刻度线的位置
 
     this.render();
   }
@@ -235,7 +236,7 @@ export default class ihm_TimeSlider {
       // 保存黄色刻度线引用到每个轨道
       trackRow.markerLine = markerLine;
 
-      console.log("sliderContainer", sliderContainer);
+      // console.log("sliderContainer", sliderContainer);
       if (this.tracksInfoArr.length !== 0) {
         const info = this.tracksInfoArr[trackIndex];
         console.log("info", info);
@@ -256,7 +257,7 @@ export default class ihm_TimeSlider {
       const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleInterval);
 
       timeBlocks.forEach((block) => {
-        // console.log("block", block);
+        console.log("block", block);
         const recordingSegment = createElement("div", null, {
           height: "100%",
           width: `${block.width}px`,
