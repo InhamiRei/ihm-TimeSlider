@@ -34,6 +34,7 @@ export default class ihm_TimeSlider {
     this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
 
     this.tracksContainer = null; // 轨道容器
+    this.timeIndicatorText = null; // 时间指示文字
 
     this.tracksInfoArr = []; // 轨道信息数组，用来还原黄色刻度线的位置
 
@@ -224,7 +225,7 @@ export default class ihm_TimeSlider {
       const markerLine = createElement("div", "ihm-timeSlider-markerLine", {
         position: "absolute",
         height: "100%",
-        width: "2px",
+        width: "1px",
         backgroundColor: "yellow",
         left: "0", // 初始位置
         top: "0",
@@ -305,6 +306,7 @@ export default class ihm_TimeSlider {
       });
 
       dragContainer.appendChild(sliderContainer);
+      this.bindHoverEvents(dragContainer);
       trackRow.appendChild(dragContainer);
       this.tracksContainer.appendChild(trackRow);
     });
@@ -433,6 +435,61 @@ export default class ihm_TimeSlider {
     });
   }
 
+  bindHoverEvents(timelineContainer) {
+    // 创建并添加时间指示线
+    const timeIndicatorLine = createElement("div", "ihm-timeSlider-timeMarker", {
+      position: "absolute",
+      width: "1px",
+      height: "100%",
+      backgroundColor: "red",
+      pointerEvents: "none",
+      zIndex: 10,
+      top: "0",
+      left: "-9999px", // 初始隐藏
+    });
+    timelineContainer.appendChild(timeIndicatorLine);
+
+    timelineContainer.addEventListener("mousemove", (e) => {
+      const timelineLeft = timelineContainer.getBoundingClientRect().left;
+      const mouseX = e.clientX - timelineLeft;
+
+      // 根据鼠标位置计算当前时间
+      const time = calculateTimeFromPosition(mouseX, this.scaleWidth, this.scaleInterval);
+
+      // 更新时间指示线位置
+      timeIndicatorLine.style.left = `${mouseX}px`;
+
+      // 更新时间显示
+      this.updateTimeDisplay(time, mouseX);
+    });
+
+    timelineContainer.addEventListener("mouseleave", () => {
+      timeIndicatorLine.style.left = "-9999px"; // 隐藏时间指示线
+      this.timeIndicatorText.style.left = "-9999px"; // 隐藏时间显示
+    });
+  }
+
+  updateTimeDisplay(time, mouseX) {
+    this.timeIndicatorText = document.querySelector(".ihm-timeSlider-timeDisplay");
+
+    if (!this.timeIndicatorText) {
+      this.timeIndicatorText = createElement("div", "ihm-timeSlider-timeDisplay", {
+        position: "absolute",
+        top: "0",
+        left: `${mouseX - 10}px`,
+        color: "#fff",
+        fontSize: "10px",
+      });
+      // 添加到class为ihm-timeSlider-topbarContainer-dragContainer的元素中
+      const dragContainer = this.container.querySelector(".ihm-timeSlider-topbarContainer-dragContainer");
+      dragContainer.appendChild(this.timeIndicatorText);
+    } else {
+      this.timeIndicatorText.style.left = `${mouseX - 10}px`;
+    }
+
+    this.timeIndicatorText.textContent = time;
+  }
+
   // 切换到前一天
   prevDay() {
     console.log("prevDay");
@@ -484,15 +541,6 @@ export default class ihm_TimeSlider {
     } else {
       console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
     }
-  }
-
-  // 黄色刻度线计算并移动
-  calculateAndMoveMarkerLine() {}
-
-  // 更新录像数据
-  updateData(newData) {
-    this.data = newData;
-    this.render();
   }
 
   // 设置日期变更回调
