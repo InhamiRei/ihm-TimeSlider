@@ -37,7 +37,7 @@ export const formatMinutesToTime = (minutes) => {
  * @param {number} startMinutes - 时间块的起始分钟数
  * @param {number} endMinutes - 时间块的结束分钟数
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度（px）
- * @param {number} scaleInterval - 每个时间单位对应的时间间隔（分钟）
+ * @param {number} scaleMinutes - 每个时间单位对应的时间间隔（分钟）
  * @returns {number} 时间块的像素宽度
  * @description
  * - 该函数根据时间块的开始和结束分钟数，计算出该时间块对应的像素宽度。
@@ -45,8 +45,8 @@ export const formatMinutesToTime = (minutes) => {
  * @example
  * calculateWidth(0, 120, 50, 60); // 返回 100
  */
-export const calculateWidth = (startMinutes, endMinutes, scaleWidth, scaleInterval) => {
-  return ((endMinutes - startMinutes) / scaleInterval) * scaleWidth;
+export const calculateWidth = (startMinutes, endMinutes, scaleWidth, scaleMinutes) => {
+  return ((endMinutes - startMinutes) / scaleMinutes) * scaleWidth;
 };
 
 /**
@@ -54,18 +54,18 @@ export const calculateWidth = (startMinutes, endMinutes, scaleWidth, scaleInterv
  * @function
  * @param {number} blockLeft - 点击位置距离滑块容器左侧的像素值 (px)
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
- * @param {number} scaleInterval - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @param {number} scaleMinutes - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
  * @returns {string} 格式化的时间字符串，格式为 "HH:MM"，例如 "02:30"
  * @description
  * - 该函数通过滑块位置计算出总时间，并将其格式化为小时和分钟的形式。
- * - 总分钟数由位置 (blockLeft) 与单位宽度 (scaleWidth) 和时间间隔 (scaleInterval) 计算得出。
+ * - 总分钟数由位置 (blockLeft) 与单位宽度 (scaleWidth) 和时间间隔 (scaleMinutes) 计算得出。
  * - 返回结果始终以 "HH:MM" 格式显示。
  * @example
  * calculateTimeFromPosition(150, 50, 60); // 返回 "03:00"
  */
-export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleInterval) => {
+export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleMinutes) => {
   // 计算总分钟数
-  const totalMinutes = (blockLeft / scaleWidth) * scaleInterval;
+  const totalMinutes = (blockLeft / scaleWidth) * scaleMinutes;
 
   // 转换为小时和分钟
   const hours = Math.floor(totalMinutes / 60);
@@ -80,7 +80,7 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleInterval) 
  * @function
  * @param {string} time - 时间字符串，格式为 "HH:MM"，例如 "02:30"
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
- * @param {number} scaleInterval - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @param {number} scaleMinutes - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
  * @returns {number} 滑块位置距离容器左侧的像素值 (px)
  * @description
  * - 该函数通过时间字符串解析总分钟数，并计算对应的滑块位置。
@@ -89,13 +89,13 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleInterval) 
  * @example
  * calculatePositionFromTime("03:00", 50, 60); // 返回 150
  */
-export const calculatePositionFromTime = (time, scaleWidth, scaleInterval) => {
+export const calculatePositionFromTime = (time, scaleWidth, scaleMinutes) => {
   // 将时间字符串 (hh:mm) 转换为总分钟数
   const [hours, minutes] = time.split(":").map(Number);
   const totalMinutes = hours * 60 + minutes;
 
   // 计算 blockLeft
-  const blockLeft = (totalMinutes * scaleWidth) / scaleInterval;
+  const blockLeft = (totalMinutes * scaleWidth) / scaleMinutes;
 
   return blockLeft;
 };

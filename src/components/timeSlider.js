@@ -19,14 +19,28 @@ export default class ihm_TimeSlider {
     this.scaleTime = 24;
     // 刻度宽度，默认是50px
     this.scaleWidth = 50;
-    // 刻度间隔，默认是60分钟
-    this.scaleInterval = 60;
+    // 刻度分间隔，默认是60分钟
+    this.scaleMinutes = 60;
+    // 刻度秒间隔，默认是3600秒
+    this.scaleSeconds = 3600;
 
     this.scaleMap = {
-      24: 60, // 1小时
-      48: 30, // 30分钟
-      288: 5, // 5分钟
-      1440: 1, // 1分钟
+      24: {
+        scaleMinutes: 60,
+        scaleSeconds: 3600,
+      }, // 1小时
+      48: {
+        scaleMinutes: 30,
+        scaleSeconds: 1800,
+      }, // 30分钟
+      288: {
+        scaleMinutes: 5,
+        scaleSeconds: 300,
+      }, // 5分钟
+      1440: {
+        scaleMinutes: 1,
+        scaleSeconds: 60,
+      }, // 1分钟
     };
 
     this.onDateChange = null; // 日期变更回调
@@ -119,7 +133,7 @@ export default class ihm_TimeSlider {
       top: "0",
     });
 
-    const scaleArr = createScale(this.scaleTime, this.scaleInterval);
+    const scaleArr = createScale(this.scaleTime, this.scaleMinutes);
 
     // console.log("scaleArr", scaleArr);
 
@@ -244,9 +258,9 @@ export default class ihm_TimeSlider {
 
         if (info) {
           const { time: infoTime, criticalTime: infoCriticalTime } = info;
-          const newLeft = calculatePositionFromTime(infoTime, this.scaleWidth, this.scaleInterval);
+          const newLeft = calculatePositionFromTime(infoTime, this.scaleWidth, this.scaleMinutes);
           const markerLine = trackRow.markerLine;
-          const newCritical = calculatePositionFromTime(infoCriticalTime, this.scaleWidth, this.scaleInterval);
+          const newCritical = calculatePositionFromTime(infoCriticalTime, this.scaleWidth, this.scaleMinutes);
 
           markerLine.style.left = `${newLeft}px`;
 
@@ -255,7 +269,7 @@ export default class ihm_TimeSlider {
         }
       }
 
-      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleInterval);
+      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleMinutes);
 
       timeBlocks.forEach((block) => {
         // console.log("block", block);
@@ -279,7 +293,7 @@ export default class ihm_TimeSlider {
             // console.log("click_left", click_left);
             // console.log("block_left", block_left);
 
-            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleInterval);
+            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleMinutes);
 
             console.log("对应时间", time);
 
@@ -324,12 +338,12 @@ export default class ihm_TimeSlider {
 
     markerLine.movementInterval = setInterval(() => {
       const currentLeft = parseInt(markerLine.style.left, 10) || 0;
-      const newLeft = currentLeft + this.scaleWidth / this.scaleInterval; // 每秒移动
+      const newLeft = currentLeft + this.scaleWidth / this.scaleMinutes; // 每秒移动
 
       if (newLeft >= critical) {
         clearInterval(markerLine.movementInterval); // 停止移动
         markerLine.style.left = `${critical}px`;
-        const time = calculateTimeFromPosition(critical, this.scaleWidth, this.scaleInterval);
+        const time = calculateTimeFromPosition(critical, this.scaleWidth, this.scaleMinutes);
         markerLine.info = {
           time,
           criticalTime,
@@ -337,7 +351,7 @@ export default class ihm_TimeSlider {
         console.log("Reached end of track", time);
       } else {
         markerLine.style.left = `${newLeft}px`;
-        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleInterval);
+        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleMinutes);
         markerLine.info = {
           time,
           criticalTime,
@@ -454,7 +468,7 @@ export default class ihm_TimeSlider {
       const mouseX = e.clientX - timelineLeft;
 
       // 根据鼠标位置计算当前时间
-      const time = calculateTimeFromPosition(mouseX, this.scaleWidth, this.scaleInterval);
+      const time = calculateTimeFromPosition(mouseX, this.scaleWidth, this.scaleMinutes);
 
       // 更新时间指示线位置
       timeIndicatorLine.style.left = `${mouseX}px`;
@@ -529,14 +543,16 @@ export default class ihm_TimeSlider {
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
       this.scaleTime = scales[currentIndex + 1];
-      this.scaleInterval = this.scaleMap[this.scaleTime]; // 更新刻度间隔
-      console.log("Zoomed In:", this.scaleTime, this.scaleInterval);
+      this.scaleMinutes = this.scaleMap[this.scaleTime].scaleMinutes; // 获取新的刻度间隔
+      this.scaleSeconds = this.scaleMap[this.scaleTime].scaleSeconds; // 获取新的刻度秒数
+      console.log("Zoomed In:", this.scaleTime, this.scaleMinutes, this.scaleSeconds);
       this.render();
     } else if (direction === "out" && currentIndex > 0) {
       // 缩小：切换到上一个更小的刻度
       this.scaleTime = scales[currentIndex - 1];
-      this.scaleInterval = this.scaleMap[this.scaleTime]; // 更新刻度间隔
-      console.log("Zoomed Out:", this.scaleTime, this.scaleInterval);
+      this.scaleMinutes = this.scaleMap[this.scaleTime].scaleMinutes; // 获取新的刻度间隔
+      this.scaleSeconds = this.scaleMap[this.scaleTime].scaleSeconds; // 获取新的刻度秒数
+      console.log("Zoomed Out:", this.scaleTime, this.scaleMinutes, this.scaleSeconds);
       this.render();
     } else {
       console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);

@@ -41,16 +41,16 @@ export const getContainer = (id) => {
 /**
  * 生成刻度线数组，根据给定的时间范围和时间间隔
  * @param {number} scaleTime - 时间范围（例如 24 表示 24 小时）
- * @param {number} scaleInterval - 每个时间单位的间隔（例如 60 分钟表示每小时的间隔）
+ * @param {number} scaleMinutes - 每个时间单位的间隔（例如 60 分钟表示每小时的间隔）
  * @returns {Array<string>} 刻度线的时间数组
  * @description
- * - 该函数生成从 `00:00` 到指定时间范围（如 24 小时）的刻度线数组，时间单位按照 `scaleInterval` 进行分隔。
- * - 例如，`scaleTime` 为 24，`scaleInterval` 为 60，会生成 25 个刻度线（每小时一个）。
+ * - 该函数生成从 `00:00` 到指定时间范围（如 24 小时）的刻度线数组，时间单位按照 `scaleMinutes` 进行分隔。
+ * - 例如，`scaleTime` 为 24，`scaleMinutes` 为 60，会生成 25 个刻度线（每小时一个）。
  * @example
  * createScale(24, 60); // 返回 ["00:00", "01:00", "02:00", ..., "24:00"]
  */
-export const createScale = (scaleTime, scaleInterval) => {
-  const totalMinutes = scaleTime * scaleInterval;
+export const createScale = (scaleTime, scaleMinutes) => {
+  const totalMinutes = scaleTime * scaleMinutes;
 
   const formatTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -59,7 +59,7 @@ export const createScale = (scaleTime, scaleInterval) => {
   };
 
   const scale = [];
-  for (let i = 0; i <= totalMinutes; i += scaleInterval) {
+  for (let i = 0; i <= totalMinutes; i += scaleMinutes) {
     scale.push(formatTime(i));
   }
 
@@ -70,10 +70,10 @@ export const createScale = (scaleTime, scaleInterval) => {
  * 根据时间范围创建时间块
  * @param {Array} timeRanges - 时间范围数组，每个元素包含 startTime 和 endTime
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
- * @param {number} scaleInterval - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @param {number} scaleMinutes - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
  * @returns {Array} 时间块数组，包含 start, end, width, color 等信息
  * @description
- * - 该函数根据传入的时间范围数组 `timeRanges`，以及每个时间单位的像素宽度 `scaleWidth` 和时间间隔 `scaleInterval`，
+ * - 该函数根据传入的时间范围数组 `timeRanges`，以及每个时间单位的像素宽度 `scaleWidth` 和时间间隔 `scaleMinutes`，
  *   计算出对应的时间块，并将它们格式化为 `HH:mm` 格式。
  * - 每个时间块包含起始时间、结束时间、宽度（根据像素和时间间隔计算）以及颜色（表示时间是否空闲）。
  * - 该函数支持在时间块之间自动填充空闲时间，并以灰色表示空闲时间，以蓝色表示占用时间。
@@ -81,7 +81,7 @@ export const createScale = (scaleTime, scaleInterval) => {
  * createTimeBlocks([{ startTime: "2024-12-17 00:00", endTime: "2024-12-17 02:00" }], 50, 60);
  * // 返回时间块数组
  */
-export const createTimeBlocks = (timeRanges, scaleWidth, scaleInterval) => {
+export const createTimeBlocks = (timeRanges, scaleWidth, scaleMinutes) => {
   // 初始化时间块数组和上一个时间块的结束时间，默认从 00:00 开始
   const timeBlocks = [];
   let lastEnd = parseTimeToMinutes("00:00");
@@ -97,7 +97,7 @@ export const createTimeBlocks = (timeRanges, scaleWidth, scaleInterval) => {
       timeBlocks.push({
         start: formatMinutesToTime(lastEnd),
         end: formatMinutesToTime(startMinutes),
-        width: calculateWidth(lastEnd, startMinutes, scaleWidth, scaleInterval),
+        width: calculateWidth(lastEnd, startMinutes, scaleWidth, scaleMinutes),
         color: "gray", // 灰色表示空闲时间
       });
     }
@@ -106,7 +106,7 @@ export const createTimeBlocks = (timeRanges, scaleWidth, scaleInterval) => {
     timeBlocks.push({
       start: formatMinutesToTime(startMinutes),
       end: formatMinutesToTime(endMinutes),
-      width: calculateWidth(startMinutes, endMinutes, scaleWidth, scaleInterval),
+      width: calculateWidth(startMinutes, endMinutes, scaleWidth, scaleMinutes),
       color: "blue", // 蓝色表示占用时间
     });
 
@@ -120,7 +120,7 @@ export const createTimeBlocks = (timeRanges, scaleWidth, scaleInterval) => {
     timeBlocks.push({
       start: formatMinutesToTime(lastEnd),
       end: formatMinutesToTime(endOfDay),
-      width: calculateWidth(lastEnd, endOfDay, scaleWidth, scaleInterval),
+      width: calculateWidth(lastEnd, endOfDay, scaleWidth, scaleMinutes),
       color: "gray", // 灰色表示空闲时间
     });
   }
