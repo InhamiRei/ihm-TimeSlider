@@ -133,7 +133,7 @@ export default class ihm_TimeSlider {
       top: "0",
     });
 
-    const scaleArr = createScale(this.scaleTime, this.scaleMinutes);
+    const scaleArr = createScale(this.scaleTime, this.scaleSeconds);
 
     // console.log("scaleArr", scaleArr);
 
@@ -161,7 +161,7 @@ export default class ihm_TimeSlider {
       const marginLeft = i === 0 ? 0 : i === this.scaleTime ? -28 : -15;
 
       scaleBlock.innerHTML = `
-        <span style="user-select: none; margin-left: ${marginLeft}px;">${scaleArr[i]}</span>
+        <span style="user-select: none; margin-left: ${marginLeft}px;">${scaleArr[i].slice(0, 5)}</span>
         <div style="width: 1px; height: 4px; background-color: #fff; position: absolute; left: 0; bottom: 0;"></div>
       `;
 
@@ -238,13 +238,13 @@ export default class ihm_TimeSlider {
       // 在 renderTracks 中，为每个轨道添加黄色刻度线
       const markerLine = createElement("div", "ihm-timeSlider-markerLine", {
         position: "absolute",
-        height: "100%",
-        width: "1px",
-        backgroundColor: "yellow",
-        left: "0", // 初始位置
         top: "0",
+        left: "0", // 初始位置
+        width: "1px",
+        height: "100%",
         zIndex: "2", // 确保在滑块上层
         pointerEvents: "none", // 防止事件阻挡
+        backgroundColor: "yellow",
       });
 
       sliderContainer.appendChild(markerLine);
@@ -258,9 +258,9 @@ export default class ihm_TimeSlider {
 
         if (info) {
           const { time: infoTime, criticalTime: infoCriticalTime } = info;
-          const newLeft = calculatePositionFromTime(infoTime, this.scaleWidth, this.scaleMinutes);
+          const newLeft = calculatePositionFromTime(infoTime, this.scaleWidth, this.scaleSeconds);
           const markerLine = trackRow.markerLine;
-          const newCritical = calculatePositionFromTime(infoCriticalTime, this.scaleWidth, this.scaleMinutes);
+          const newCritical = calculatePositionFromTime(infoCriticalTime, this.scaleWidth, this.scaleSeconds);
 
           markerLine.style.left = `${newLeft}px`;
 
@@ -269,7 +269,7 @@ export default class ihm_TimeSlider {
         }
       }
 
-      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleMinutes);
+      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleSeconds);
 
       timeBlocks.forEach((block) => {
         // console.log("block", block);
@@ -289,11 +289,7 @@ export default class ihm_TimeSlider {
             // 蓝色滑块距离左侧的距离 这里并不需要取拖拽的left，因为拖拽后相应的滑块容器距离也会减少
             const block_left = click_left - container_left;
 
-            // console.log("container_left", container_left);
-            // console.log("click_left", click_left);
-            // console.log("block_left", block_left);
-
-            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleMinutes);
+            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleSeconds);
 
             console.log("对应时间", time);
 
@@ -320,7 +316,7 @@ export default class ihm_TimeSlider {
       });
 
       dragContainer.appendChild(sliderContainer);
-      this.bindHoverEvents(dragContainer);
+      this.bindHoverEvents(sliderContainer);
       trackRow.appendChild(dragContainer);
       this.tracksContainer.appendChild(trackRow);
     });
@@ -336,14 +332,22 @@ export default class ihm_TimeSlider {
       markerLine.movementInterval = null;
     }
 
+    // 计算每秒钟应移动的像素
+    const pixelsPerSecond = this.scaleWidth / this.scaleSeconds; // 每秒钟移动的像素
+
+    console.log("pixelsPerSecond", pixelsPerSecond);
+
     markerLine.movementInterval = setInterval(() => {
-      const currentLeft = parseInt(markerLine.style.left, 10) || 0;
-      const newLeft = currentLeft + this.scaleWidth / this.scaleMinutes; // 每秒移动
+      const currentLeft = parseFloat(markerLine.style.left) || 0;
+      const newLeft = currentLeft + pixelsPerSecond; // 每秒移动对应的像素
 
       if (newLeft >= critical) {
-        clearInterval(markerLine.movementInterval); // 停止移动
+        // 到达临界点，停止移动
+        clearInterval(markerLine.movementInterval);
+        markerLine.movementInterval = null;
         markerLine.style.left = `${critical}px`;
-        const time = calculateTimeFromPosition(critical, this.scaleWidth, this.scaleMinutes);
+
+        const time = calculateTimeFromPosition(critical, this.scaleWidth, this.scaleSeconds);
         markerLine.info = {
           time,
           criticalTime,
@@ -351,7 +355,7 @@ export default class ihm_TimeSlider {
         console.log("Reached end of track", time);
       } else {
         markerLine.style.left = `${newLeft}px`;
-        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleMinutes);
+        const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleSeconds);
         markerLine.info = {
           time,
           criticalTime,
@@ -449,56 +453,58 @@ export default class ihm_TimeSlider {
     });
   }
 
-  bindHoverEvents(timelineContainer) {
+  // 绑定轨道hover事件
+  bindHoverEvents(sliderContainer) {
     // 创建并添加时间指示线
     const timeIndicatorLine = createElement("div", "ihm-timeSlider-timeMarker", {
       position: "absolute",
-      width: "1px",
-      height: "100%",
-      backgroundColor: "red",
-      pointerEvents: "none",
-      zIndex: 10,
       top: "0",
       left: "-9999px", // 初始隐藏
+      width: "1px",
+      height: "100%",
+      zIndex: 10,
+      pointerEvents: "none",
+      backgroundColor: "red",
     });
-    timelineContainer.appendChild(timeIndicatorLine);
+    sliderContainer.appendChild(timeIndicatorLine);
 
-    timelineContainer.addEventListener("mousemove", (e) => {
-      const timelineLeft = timelineContainer.getBoundingClientRect().left;
-      const mouseX = e.clientX - timelineLeft;
+    sliderContainer.addEventListener("mousemove", (event) => {
+      const container_left = sliderContainer.getBoundingClientRect().left;
+      const click_left = event.clientX;
+      const line_left = click_left - container_left;
 
       // 根据鼠标位置计算当前时间
-      const time = calculateTimeFromPosition(mouseX, this.scaleWidth, this.scaleMinutes);
+      const time = calculateTimeFromPosition(line_left, this.scaleWidth, this.scaleSeconds);
 
       // 更新时间指示线位置
-      timeIndicatorLine.style.left = `${mouseX}px`;
+      timeIndicatorLine.style.left = `${line_left}px`;
 
       // 更新时间显示
-      this.updateTimeDisplay(time, mouseX);
+      this.updateTimeDisplay(time, line_left);
     });
 
-    timelineContainer.addEventListener("mouseleave", () => {
+    sliderContainer.addEventListener("mouseleave", () => {
       timeIndicatorLine.style.left = "-9999px"; // 隐藏时间指示线
       this.timeIndicatorText.style.left = "-9999px"; // 隐藏时间显示
     });
   }
 
-  updateTimeDisplay(time, mouseX) {
+  updateTimeDisplay(time, line_left) {
     this.timeIndicatorText = document.querySelector(".ihm-timeSlider-timeDisplay");
 
     if (!this.timeIndicatorText) {
       this.timeIndicatorText = createElement("div", "ihm-timeSlider-timeDisplay", {
         position: "absolute",
         top: "0",
-        left: `${mouseX - 10}px`,
+        left: `${line_left - 18}px`,
         color: "#fff",
         fontSize: "10px",
       });
       // 添加到class为ihm-timeSlider-topbarContainer-dragContainer的元素中
-      const dragContainer = this.container.querySelector(".ihm-timeSlider-topbarContainer-dragContainer");
-      dragContainer.appendChild(this.timeIndicatorText);
+      const timelineContainer = this.container.querySelector(".ihm-timeSlider-topbarContainer-timeline");
+      timelineContainer.appendChild(this.timeIndicatorText);
     } else {
-      this.timeIndicatorText.style.left = `${mouseX - 10}px`;
+      this.timeIndicatorText.style.left = `${line_left - 18}px`;
     }
 
     this.timeIndicatorText.textContent = time;

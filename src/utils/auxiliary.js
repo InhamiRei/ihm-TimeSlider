@@ -1,52 +1,54 @@
 /**
- * 辅助函数：解析时间字符串（格式为 "HH:mm"）为自凌晨 00:00 开始的分钟数
+ * 辅助函数：解析时间字符串（格式为 "HH:mm:ss"）为自凌晨 00:00:00 开始的秒数
  * @function
- * @param {string} timeStr - 时间字符串，例如 "02:30"
- * @returns {number} 转换后的分钟数
+ * @param {string} timeStr - 时间字符串，例如 "02:30:30"
+ * @returns {number} 转换后的秒数
  * @description
- * - 该函数将时间字符串（例如 "02:30"）转换为自午夜 00:00 开始的分钟数。
- * - 例如，"02:30" 会转换为 150（即 2 小时 30 分钟）。
+ * - 该函数将时间字符串（例如 "02:30:30"）转换为自午夜 00:00 开始的秒数。
+ * - 例如，"02:30:30" 会转换为 9030（即 2 小时 30 分钟 30 秒）。
  * @example
- * parseTimeToMinutes("02:30"); // 返回 150
+ * parseTimeToSeconds("02:30:30"); // 返回 9030
  */
-export const parseTimeToMinutes = (timeStr) => {
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  return hours * 60 + minutes;
+export const parseTimeToSeconds = (timeStr) => {
+  const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+  return hours * 3600 + minutes * 60 + seconds;
 };
 
 /**
- * 辅助函数：将分钟数转换回时间字符串（格式 "HH:mm"）
+ * 辅助函数：将秒数转换回时间字符串（格式 "HH:mm:ss"）
  * @function
- * @param {number} minutes - 自凌晨 00:00 开始的分钟数
- * @returns {string} 转换后的时间字符串，格式为 "HH:mm"
+ * @param {number} seconds - 自凌晨 00:00 开始的秒数
+ * @returns {string} 转换后的时间字符串，格式为 "HH:mm:ss"
  * @description
- * - 该函数将分钟数转换为标准的 "HH:mm" 格式时间字符串。
- * - 例如，150 分钟会转换为 "02:30"。
+ * - 该函数将秒数转换为标准的 "HH:mm:ss" 格式时间字符串。
+ * - 例如，9030 秒会转换为 "02:30:30"。
  * @example
- * formatMinutesToTime(150); // 返回 "02:30"
+ * formatSecondsToTime(9030); // 返回 "02:30:30"
  */
-export const formatMinutesToTime = (minutes) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+export const formatSecondsToTime = (seconds) => {
+  const hours = Math.floor(seconds / 3600); // 计算小时数
+  const minutes = Math.floor((seconds % 3600) / 60); // 计算剩余的分钟数
+  const remainingSeconds = seconds % 60; // 计算剩余的秒数
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
 };
 
 /**
- * 辅助函数：根据分钟数计算对应的像素宽度
+ * 辅助函数：根据秒数计算对应的像素宽度
  * @function
- * @param {number} startMinutes - 时间块的起始分钟数
- * @param {number} endMinutes - 时间块的结束分钟数
+ * @param {number} startSeconds - 时间块的起始秒数
+ * @param {number} endSeconds - 时间块的结束秒数
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度（px）
- * @param {number} scaleMinutes - 每个时间单位对应的时间间隔（分钟）
+ * @param {number} scaleSeconds - 每个时间单位对应的时间间隔（秒）
  * @returns {number} 时间块的像素宽度
  * @description
- * - 该函数根据时间块的开始和结束分钟数，计算出该时间块对应的像素宽度。
+ * - 该函数根据时间块的开始和结束秒数，计算出该时间块对应的像素宽度。
  * - 例如，假设每小时宽度为 50px，且时间块持续 2 小时，则该时间块宽度为 100px。
  * @example
- * calculateWidth(0, 120, 50, 60); // 返回 100
+ * calculateWidthInSeconds(0, 7200, 50, 3600); // 返回 100
  */
-export const calculateWidth = (startMinutes, endMinutes, scaleWidth, scaleMinutes) => {
-  return ((endMinutes - startMinutes) / scaleMinutes) * scaleWidth;
+export const calculateWidthInSeconds = (startSeconds, endSeconds, scaleWidth, scaleSeconds) => {
+  return ((endSeconds - startSeconds) / scaleSeconds) * scaleWidth;
 };
 
 /**
@@ -54,48 +56,49 @@ export const calculateWidth = (startMinutes, endMinutes, scaleWidth, scaleMinute
  * @function
  * @param {number} blockLeft - 点击位置距离滑块容器左侧的像素值 (px)
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
- * @param {number} scaleMinutes - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
- * @returns {string} 格式化的时间字符串，格式为 "HH:MM"，例如 "02:30"
+ * @param {number} scaleSeconds - 每个时间单位对应的时间间隔 (秒)，例如 3600 表示每单位代表 1 小时（3600 秒）
+ * @returns {string} 格式化的时间字符串，格式为 "HH:mm:ss"，例如 "02:30:00"
  * @description
- * - 该函数通过滑块位置计算出总时间，并将其格式化为小时和分钟的形式。
- * - 总分钟数由位置 (blockLeft) 与单位宽度 (scaleWidth) 和时间间隔 (scaleMinutes) 计算得出。
- * - 返回结果始终以 "HH:MM" 格式显示。
+ * - 该函数通过滑块位置计算出总时间，并将其格式化为小时、分钟、秒的形式。
+ * - 总秒数由位置 (blockLeft) 与单位宽度 (scaleWidth) 和时间间隔 (scaleSeconds) 计算得出。
+ * - 返回结果始终以 "HH:mm:ss" 格式显示。
  * @example
- * calculateTimeFromPosition(150, 50, 60); // 返回 "03:00"
+ * calculateTimeFromPosition(150, 50, 3600); // 返回 "01:30:00"
  */
-export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleMinutes) => {
-  // 计算总分钟数
-  const totalMinutes = (blockLeft / scaleWidth) * scaleMinutes;
+export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleSeconds) => {
+  // 计算总秒数
+  const totalSeconds = (blockLeft / scaleWidth) * scaleSeconds;
 
-  // 转换为小时和分钟
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = Math.floor(totalMinutes % 60);
+  // 转换为小时、分钟和秒
+  const hours = Math.floor(totalSeconds / 3600); // 计算小时数
+  const minutes = Math.floor((totalSeconds % 3600) / 60); // 计算剩余分钟数
+  const seconds = Math.floor(totalSeconds % 60); // 计算剩余秒数
 
   // 返回格式化时间
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
 /**
  * 辅助函数：根据时间计算滑块位置
  * @function
- * @param {string} time - 时间字符串，格式为 "HH:MM"，例如 "02:30"
+ * @param {string} time - 时间字符串，格式为 "HH:MM:SS"，例如 "02:30:30"
  * @param {number} scaleWidth - 每个时间单位对应的像素宽度 (px)，例如 50px 表示 1 小时间隔为 50px
- * @param {number} scaleMinutes - 每个时间单位对应的时间间隔 (分钟)，例如 30 表示每单位代表 30 分钟
+ * @param {number} scaleSeconds - 每个时间单位对应的时间间隔 (秒)，例如 3600 表示每单位代表 1 小时（3600 秒）
  * @returns {number} 滑块位置距离容器左侧的像素值 (px)
  * @description
- * - 该函数通过时间字符串解析总分钟数，并计算对应的滑块位置。
- * - 总分钟数由时间字符串解析为小时和分钟并求和得出。
+ * - 该函数通过时间字符串解析总秒数，并计算对应的滑块位置。
+ * - 总秒数由时间字符串解析为小时、分钟、秒并求和得出。
  * - 返回值为滑块距离容器左侧的像素值。
  * @example
- * calculatePositionFromTime("03:00", 50, 60); // 返回 150
+ * calculatePositionFromTime("02:30:30", 50, 3600); // 返回 150
  */
-export const calculatePositionFromTime = (time, scaleWidth, scaleMinutes) => {
-  // 将时间字符串 (hh:mm) 转换为总分钟数
-  const [hours, minutes] = time.split(":").map(Number);
-  const totalMinutes = hours * 60 + minutes;
+export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
+  // 将时间字符串 (hh:mm:ss) 转换为总秒数
+  const [hours, minutes, seconds] = time.split(":").map(Number);
+  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-  // 计算 blockLeft
-  const blockLeft = (totalMinutes * scaleWidth) / scaleMinutes;
+  // 计算滑块位置 (blockLeft)
+  const blockLeft = (totalSeconds * scaleWidth) / scaleSeconds;
 
   return blockLeft;
 };
