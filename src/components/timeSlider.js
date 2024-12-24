@@ -19,28 +19,14 @@ export default class ihm_TimeSlider {
     this.scaleTime = 24;
     // 刻度宽度，默认是50px
     this.scaleWidth = 50;
-    // 刻度分间隔，默认是60分钟
-    this.scaleMinutes = 60;
     // 刻度秒间隔，默认是3600秒
     this.scaleSeconds = 3600;
 
     this.scaleMap = {
-      24: {
-        scaleMinutes: 60,
-        scaleSeconds: 3600,
-      }, // 1小时
-      48: {
-        scaleMinutes: 30,
-        scaleSeconds: 1800,
-      }, // 30分钟
-      288: {
-        scaleMinutes: 5,
-        scaleSeconds: 300,
-      }, // 5分钟
-      1440: {
-        scaleMinutes: 1,
-        scaleSeconds: 60,
-      }, // 1分钟
+      24: 3600, // 1小时
+      48: 1800, // 30分钟
+      288: 300, // 5分钟
+      1440: 60, // 1分钟
     };
 
     this.onDateChange = null; // 日期变更回调
@@ -191,6 +177,8 @@ export default class ihm_TimeSlider {
 
     this.tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
       position: "relative",
+      maxHeight: "110px",
+      overflow: "auto",
     });
 
     recordingsPerTrack.forEach((recordings, trackIndex) => {
@@ -335,9 +323,7 @@ export default class ihm_TimeSlider {
     // 计算每秒钟应移动的像素
     const pixelsPerSecond = this.scaleWidth / this.scaleSeconds; // 每秒钟移动的像素
 
-    console.log("pixelsPerSecond", pixelsPerSecond);
-
-    markerLine.movementInterval = setInterval(() => {
+    const executeMovement = () => {
       const currentLeft = parseFloat(markerLine.style.left) || 0;
       const newLeft = currentLeft + pixelsPerSecond; // 每秒移动对应的像素
 
@@ -362,7 +348,11 @@ export default class ihm_TimeSlider {
         };
         console.log("time", time);
       }
-    }, 1000); // 每秒更新
+    };
+    // 立即执行一次
+    executeMovement();
+    // 每秒执行一次
+    markerLine.movementInterval = setInterval(executeMovement, 1000);
   }
 
   // 绑定事件
@@ -418,6 +408,24 @@ export default class ihm_TimeSlider {
         requestAnimationFrame(updatePosition);
       }
     };
+
+    // 滚轮事件
+    dragContainer.addEventListener("wheel", (e) => {
+      // 向上滚动：减小位置（时间轴向左移）
+      // 向下滚动：增加位置（时间轴向右移）
+      const scrollSpeed = e.deltaY > 0 ? 10 : -10; // 根据滚动方向设置速度
+      currentLeft += scrollSpeed;
+
+      // 限制滚动范围
+      const maxLeft = 0;
+      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+      currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
+
+      timelineContainer.style.left = `${currentLeft}px`;
+
+      // 同步其他元素的滚动
+      syncSliderPositions();
+    });
 
     dragContainer.addEventListener("mousedown", (e) => {
       isDragging = true;
@@ -549,16 +557,14 @@ export default class ihm_TimeSlider {
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
       this.scaleTime = scales[currentIndex + 1];
-      this.scaleMinutes = this.scaleMap[this.scaleTime].scaleMinutes; // 获取新的刻度间隔
-      this.scaleSeconds = this.scaleMap[this.scaleTime].scaleSeconds; // 获取新的刻度秒数
-      console.log("Zoomed In:", this.scaleTime, this.scaleMinutes, this.scaleSeconds);
+      this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
+      console.log("Zoomed In:", this.scaleTime, this.scaleSeconds);
       this.render();
     } else if (direction === "out" && currentIndex > 0) {
       // 缩小：切换到上一个更小的刻度
       this.scaleTime = scales[currentIndex - 1];
-      this.scaleMinutes = this.scaleMap[this.scaleTime].scaleMinutes; // 获取新的刻度间隔
-      this.scaleSeconds = this.scaleMap[this.scaleTime].scaleSeconds; // 获取新的刻度秒数
-      console.log("Zoomed Out:", this.scaleTime, this.scaleMinutes, this.scaleSeconds);
+      this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
+      console.log("Zoomed Out:", this.scaleTime, this.scaleSeconds);
       this.render();
     } else {
       console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
