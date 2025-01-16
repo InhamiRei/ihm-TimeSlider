@@ -1,14 +1,28 @@
-import { createElement, getContainer, createScale, createTimeBlocks } from "../utils/common.js";
+import { createElement, createScale, createTimeBlocks, isDom, resolveValue } from "../utils/common.js";
 import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
-    this.container = getContainer(config.id);
-    this.date = new Date(config.curDay); // 当前显示的日期
+    console.log("config", config);
+    // container是必填的，需要知道加在哪个地方
+    if (!config || !config.container) {
+      throw new Error("The 'container' parameter is required and must be a valid DOM element.");
+    }
+    // 确保 container 是一个 DOM 元素
+    if (!isDom(config.container)) {
+      throw new Error("The 'container' parameter must be a valid DOM element.");
+    }
+
+    this.styles = config.styles || {};
+    this.version = "v202501151711_ARGES_TIMESLIDER";
+    this.flag = config.flag;
+
+    this.container = config.container;
+    this.date = new Date(config.curDay || new Date().toISOString().split("T")[0]); // 当前显示的日期
     this.data = config.data; // 录像数据
 
-    this.padding = { top: 0, bottom: 0, left: 25, right: 25 };
+    this.padding = { top: 0, bottom: 0, left: 0, right: 0 };
 
     this.trackHeight = 25; // 每条轨道的高度
     this.trackGap = 0; // 每条轨道的间隔
@@ -39,6 +53,7 @@ export default class ihm_TimeSlider {
     this.tracksInfoArr = []; // 轨道信息数组，用来还原黄色刻度线的位置
 
     this.render();
+    this._addStyles();
   }
 
   // 主渲染方法
@@ -77,7 +92,7 @@ export default class ihm_TimeSlider {
   renderTopbar() {
     const topbarContainer = createElement("div", "ihm-timeSlider-topbarContainer", {
       position: "relative",
-      height: "30px",
+      height: resolveValue(this.styles.headerHeight, "30px"),
       border: "1px solid #ccc",
       borderBottom: "none",
       display: "flex",
@@ -138,7 +153,7 @@ export default class ihm_TimeSlider {
         // 如果是最后一个宽度为1
         width: i === this.scaleTime ? "1px" : `${x}px`,
         height: "100%",
-        backgroundColor: "red",
+        backgroundColor: resolveValue(this.styles.headerBackgroundColor, "transparent"),
         color: "#fff",
         fontSize: "12px",
       });
@@ -177,7 +192,7 @@ export default class ihm_TimeSlider {
 
     this.tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
       position: "relative",
-      maxHeight: "110px",
+      maxHeight: resolveValue(this.styles.scrollHeight, "none"),
       overflow: "auto",
     });
 
@@ -574,5 +589,70 @@ export default class ihm_TimeSlider {
   // 设置日期变更回调
   setDateChangeCallback(callback) {
     this.onDateChange = callback;
+  }
+
+  destroy() {
+    // 清除容器中的内容
+    this.container.innerHTML = "";
+
+    // 清理所有轨道上的黄色刻度线的定时器
+    if (this.tracksContainer) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine && track.markerLine.movementInterval) {
+          clearInterval(track.markerLine.movementInterval);
+          track.markerLine.movementInterval = null;
+        }
+      }
+    }
+
+    // 移除事件监听器
+    const eventMap = [
+      { selector: ".ihm-timeSlider-plus-svg", handler: () => this.adjustTimeLine("in") },
+      { selector: ".ihm-timeSlider-prev-svg", handler: () => this.prevDay() },
+      { selector: ".ihm-timeSlider-next-svg", handler: () => this.nextDay() },
+      { selector: ".ihm-timeSlider-minus-svg", handler: () => this.adjustTimeLine("out") },
+    ];
+    eventMap.forEach(({ selector, handler }) => {
+      const element = this.container.querySelector(selector);
+      if (element) {
+        element.removeEventListener("click", handler);
+      }
+    });
+
+    // 清理全局事件监听器
+    document.removeEventListener("mousemove", this.mouseMoveHandler);
+    document.removeEventListener("mouseup", this.mouseUpHandler);
+
+    // 清空引用，防止内存泄漏
+    this.container = null;
+    this.tracksContainer = null;
+    this.timeIndicatorText = null;
+    this.onDateChange = null;
+    this.onSegmentDblClick = null;
+    this.onSegmentContextMenu = null;
+  }
+
+  // 添加CSS样式
+  _addStyles() {
+    const style = document.createElement("style");
+    style.id = this.version;
+    style.innerHTML = `
+        :root .dark-theme {
+          --arges-component-player-toolbar-font-color: #b6b9c3;
+          --arges-component-player-toolbar-bg-color: #292A31;
+          --arges-component-player-toolbar-svg-color: #f0f3ff;
+          --arges-component-player-toolbar-svg-active-color: #478cff;
+          --arges-component-player-toolbar-line-bg-color: #3f4147;
+        }
+        :root .light-theme {
+          --arges-component-player-toolbar-font-color: #67676e;
+          --arges-component-player-toolbar-bg-color: #ffffff;
+          --arges-component-player-toolbar-svg-color: #33363b;
+          --arges-component-player-toolbar-svg-active-color: #0074f2;
+          --arges-component-player-toolbar-line-bg-color: #e1e2e5;
+        }
+      `;
+    document.head.appendChild(style);
   }
 }

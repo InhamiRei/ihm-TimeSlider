@@ -130,3 +130,37 @@ export const createTimeBlocks = (timeRanges, scaleWidth, scaleSeconds) => {
   // 返回所有时间块
   return timeBlocks;
 };
+
+// 工具方法：判断是否为 DOM 节点
+export const isDom = (value) => {
+  return typeof HTMLElement === "object"
+    ? value instanceof HTMLElement
+    : value && typeof value === "object" && value.nodeType === 1 && typeof value.nodeName === "string";
+};
+
+/**
+ * 返回给定值或默认值
+ * @param {*} value - 需要检查的值。可以是任意类型，通常为 `null` 或 `undefined` 需要被检查。
+ * @param {*} defaultValue - 如果 `value` 为 `null` 或 `undefined`，则返回此默认值。
+ * @returns {*} 如果 `value` 不是 `null` 或 `undefined`，则返回 `value`；否则返回 `defaultValue`。
+ * @description
+ * 该方法用于判断传入的 `value` 是否为 `null` 或 `undefined`。
+ * - 如果 `value` 是有效值（即非 `null` 或 `undefined`），则返回 `value`。
+ * - 如果 `value` 为 `null` 或 `undefined`，则返回传入的 `defaultValue`。
+ *
+ * 该方法可以帮助处理一些可能为 `null` 或 `undefined` 的变量，避免在使用时出现错误。
+ * 它常用于获取值时提供一个回退值。
+ *
+ * @example
+ * // 示例 1：`value` 为有效值，返回 `value`
+ * resolveValue(42, 10); // 返回 42
+ *
+ * // 示例 2：`value` 为 `null`，返回 `defaultValue`
+ * resolveValue(null, 10); // 返回 10
+ *
+ * // 示例 3：`value` 为 `undefined`，返回 `defaultValue`
+ * resolveValue(undefined, 10); // 返回 10
+ */
+export const resolveValue = (value, defaultValue) => {
+  return value !== null && value !== undefined ? value : defaultValue;
+};
