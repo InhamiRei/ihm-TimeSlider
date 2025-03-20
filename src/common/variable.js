@@ -1,5 +1,5 @@
 // 版本
-export const consoleVersion = "1.0.2 - beta";
+export const _version = "1.0.2";
 
 // 样式
 export const _styles = {

@@ -29,6 +29,7 @@ markerLineHoverColor: "#0DC479",
 markerLineHoverWidth: "1px",
 iconWidth: "18px",
 iconColor: "#ffffff",
+emptyHeight: "100px;
 },
 
 ## ✨ Pictures

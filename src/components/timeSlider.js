@@ -1,7 +1,8 @@
-import { _styles } from "../utils/variable.js";
+import { _styles } from "../common/variable.js";
 import { createElement, createScale, createTimeBlocks, isDom, customStyle } from "../utils/common.js";
 import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
-import { plusSVG, prevDaySVG, nextDaySVG, minusSVG, downloadSVG } from "./svg.js";
+import { plusSVG, prevDaySVG, nextDaySVG, minusSVG, downloadSVG, emptySVG } from "../common/svg.js";
+import { __styles_empty_container } from "../common/styles.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
@@ -20,7 +21,7 @@ export default class ihm_TimeSlider {
     // 一些有关宽度的样式
     this.styles = config.styles || {};
     this.version = "v202501151711_IHM_TIMESLIDER";
-    this.flag = config.flag;
+    this.flag = config.flag || "__4f8fbfb";
 
     this.container = config.container;
     this.date = new Date(config.curDay || new Date().toISOString().split("T")[0]); // 当前显示的日期
@@ -57,7 +58,6 @@ export default class ihm_TimeSlider {
     this.tracksInfoArr = []; // 轨道信息数组，用来还原黄色刻度线的位置
 
     this.render();
-    this._addStyles();
   }
 
   // 主渲染方法
@@ -118,7 +118,7 @@ export default class ihm_TimeSlider {
     infoContainer.innerHTML = `
       ${plusSVG(this.flag, this.styles, this.theme)}
       ${prevDaySVG(this.flag, this.styles, this.theme)}
-      <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">${this.date.toLocaleDateString()}</span>
+      <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">${this.date.toISOString().split("T")[0]}</span>
       ${nextDaySVG(this.flag, this.styles, this.theme)}
       ${minusSVG(this.flag, this.styles, this.theme)}
     `;
@@ -210,6 +210,16 @@ export default class ihm_TimeSlider {
       maxHeight: customStyle(this.styles.scrollHeight, "none"),
       overflow: "auto",
     });
+
+    // 如果没有数据，显示空状态
+    if (!recordingsPerTrack || recordingsPerTrack.length === 0) {
+      const emptyContainer = createElement("div", `${this.flag}-ihm-timeSlider-empty`, __styles_empty_container(this.flag, this.styles, this.theme));
+
+      emptyContainer.innerHTML = `${emptySVG(this.flag, this.styles, this.theme)}`;
+
+      this.tracksContainer.appendChild(emptyContainer);
+      return this.tracksContainer;
+    }
 
     recordingsPerTrack.forEach((recordings, trackIndex) => {
       const isLastTrack = trackIndex === recordingsPerTrack.length - 1;
@@ -312,7 +322,18 @@ export default class ihm_TimeSlider {
             // 蓝色滑块距离左侧的距离 这里并不需要取拖拽的left，因为拖拽后相应的滑块容器距离也会减少
             const block_left = click_left - container_left;
 
-            const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleSeconds);
+            let time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleSeconds);
+
+            const timeObj = {
+              // 2025-03-20
+              day: new Date(this.date).toISOString().split("T")[0],
+              // 2025-03-21
+              nextDay: new Date(new Date(this.date).setDate(new Date(this.date).getDate() + 1)).toISOString().split("T")[0],
+              // 2025-03-20 15:00
+              time: this.date.toISOString().split("T")[0] + " " + time,
+              // 2025-03-21 15:00
+              nextTime: new Date(new Date(this.date).setDate(new Date(this.date).getDate() + 1)).toISOString().split("T")[0] + " " + time,
+            };
 
             // console.log("对应时间", time);
 
@@ -330,7 +351,7 @@ export default class ihm_TimeSlider {
 
             // 触发双击事件回调
             if (this.onSegmentDblClick) {
-              this.onSegmentDblClick({ time, info: block.extInfo, event });
+              this.onSegmentDblClick({ ...timeObj, info: block.extInfo, event });
             }
           });
         }
@@ -655,28 +676,5 @@ export default class ihm_TimeSlider {
     this.onDateChange = null;
     this.onSegmentDblClick = null;
     this.onSegmentContextMenu = null;
-  }
-
-  // 添加CSS样式
-  _addStyles() {
-    const style = document.createElement("style");
-    style.id = this.version;
-    style.innerHTML = `
-        :root .dark-theme {
-          --arges-component-player-toolbar-font-color: #b6b9c3;
-          --arges-component-player-toolbar-bg-color: #292A31;
-          --arges-component-player-toolbar-svg-color: #f0f3ff;
-          --arges-component-player-toolbar-svg-active-color: #478cff;
-          --arges-component-player-toolbar-line-bg-color: #3f4147;
-        }
-        :root .light-theme {
-          --arges-component-player-toolbar-font-color: #67676e;
-          --arges-component-player-toolbar-bg-color: #ffffff;
-          --arges-component-player-toolbar-svg-color: #33363b;
-          --arges-component-player-toolbar-svg-active-color: #0074f2;
-          --arges-component-player-toolbar-line-bg-color: #e1e2e5;
-        }
-      `;
-    document.head.appendChild(style);
   }
 }
