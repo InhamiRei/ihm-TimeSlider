@@ -1,10 +1,11 @@
-import { createElement, createScale, createTimeBlocks, isDom, resolveValue } from "../utils/common.js";
+import { _styles } from "../utils/variable.js";
+import { createElement, createScale, createTimeBlocks, isDom, customStyle } from "../utils/common.js";
 import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
-import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "./svg.js";
+import { plusSVG, prevDaySVG, nextDaySVG, minusSVG, downloadSVG } from "./svg.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
-    console.log("config", config);
+    // console.log("config", config);
     // container是必填的，需要知道加在哪个地方
     if (!config || !config.container) {
       throw new Error("The 'container' parameter is required and must be a valid DOM element.");
@@ -14,8 +15,11 @@ export default class ihm_TimeSlider {
       throw new Error("The 'container' parameter must be a valid DOM element.");
     }
 
+    // 主题
+    this.theme = config.theme || "light-theme";
+    // 一些有关宽度的样式
     this.styles = config.styles || {};
-    this.version = "v202501151711_ARGES_TIMESLIDER";
+    this.version = "v202501151711_IHM_TIMESLIDER";
     this.flag = config.flag;
 
     this.container = config.container;
@@ -62,8 +66,11 @@ export default class ihm_TimeSlider {
     this.container.innerHTML = "";
 
     const currentDateStr = this.date.toISOString().split("T")[0];
-    const recordingsPerTrack = this.data.map((trackData) => trackData[currentDateStr] || []);
-    const totalTracks = recordingsPerTrack.length;
+    const recordingsPerTrack = this.data.map((data) => data[currentDateStr] || []);
+    const extInfoArr = this.data.map((data) => data.extInfo || {});
+
+    // console.log("recordingsPerTrack", recordingsPerTrack);
+    // console.log("extInfoArr", extInfoArr);
 
     // 创建时间轴容器
     const mainContainer = createElement("div", "ihm-timeSlider-mainContainer", {
@@ -75,7 +82,7 @@ export default class ihm_TimeSlider {
     // 添加顶部
     mainContainer.appendChild(this.renderTopbar());
     // 添加录像轨道
-    mainContainer.appendChild(this.renderTracks(recordingsPerTrack, totalTracks));
+    mainContainer.appendChild(this.renderTracks(recordingsPerTrack, extInfoArr));
 
     this.container.appendChild(mainContainer);
 
@@ -92,8 +99,8 @@ export default class ihm_TimeSlider {
   renderTopbar() {
     const topbarContainer = createElement("div", "ihm-timeSlider-topbarContainer", {
       position: "relative",
-      height: resolveValue(this.styles.headerHeight, "30px"),
-      border: "1px solid #ccc",
+      height: customStyle(this.styles.headerHeight, "30px"),
+      border: `1px solid ${_styles[this.theme].borderColor}`,
       borderBottom: "none",
       display: "flex",
     });
@@ -105,15 +112,15 @@ export default class ihm_TimeSlider {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-around",
-      borderRight: "1px solid #ccc",
+      borderRight: `1px solid ${_styles[this.theme].borderColor}`,
     });
 
     infoContainer.innerHTML = `
-      ${plusSVG()}
-      ${prevDaySVG(() => this.prevDay())}
-      <span style="font-size: 14px; color: #fff;">${this.date.toLocaleDateString()}</span>
-      ${nextDaySVG()}
-      ${minusSVG()}
+      ${plusSVG(this.flag, this.styles, this.theme)}
+      ${prevDaySVG(this.flag, this.styles, this.theme)}
+      <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">${this.date.toLocaleDateString()}</span>
+      ${nextDaySVG(this.flag, this.styles, this.theme)}
+      ${minusSVG(this.flag, this.styles, this.theme)}
     `;
     topbarContainer.appendChild(infoContainer);
 
@@ -153,17 +160,25 @@ export default class ihm_TimeSlider {
         // 如果是最后一个宽度为1
         width: i === this.scaleTime ? "1px" : `${x}px`,
         height: "100%",
-        backgroundColor: resolveValue(this.styles.headerBackgroundColor, "transparent"),
-        color: "#fff",
-        fontSize: "12px",
+        backgroundColor: _styles[this.theme].headerBackgroundColor,
+        color: _styles[this.theme].headerTextColor,
+        fontSize: customStyle(this.styles.headerFontSize, "11px"),
       });
 
       // 根据条件设置 margin-left
-      const marginLeft = i === 0 ? 0 : i === this.scaleTime ? -28 : -15;
+      const marginLeft =
+        i === 0
+          ? customStyle(this.styles.headerFirstTextMargin, "0px")
+          : i === this.scaleTime
+          ? customStyle(this.styles.headerLastTextMargin, "-30px")
+          : customStyle(this.styles.headerNormalTextMargin, "-15px");
 
       scaleBlock.innerHTML = `
-        <span style="user-select: none; margin-left: ${marginLeft}px;">${scaleArr[i].slice(0, 5)}</span>
-        <div style="width: 1px; height: 4px; background-color: #fff; position: absolute; left: 0; bottom: 0;"></div>
+        <span style="user-select: none; margin-left: ${marginLeft};">${scaleArr[i].slice(0, 5)}</span>
+        <div style="width: ${customStyle(this.styles.headerFontSize, "1px")}; height: ${customStyle(
+        this.styles.headerFontSize,
+        "4px"
+      )}; background-color: ${_styles[this.theme].headerTextColor}; position: absolute; left: 0; bottom: 0;"></div>
       `;
 
       timelineContainer.appendChild(scaleBlock);
@@ -178,7 +193,7 @@ export default class ihm_TimeSlider {
   }
 
   // 创建录像轨道
-  renderTracks(recordingsPerTrack, totalTracks) {
+  renderTracks(recordingsPerTrack, extInfoArr) {
     // 防止内存泄漏
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
@@ -192,18 +207,18 @@ export default class ihm_TimeSlider {
 
     this.tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
       position: "relative",
-      maxHeight: resolveValue(this.styles.scrollHeight, "none"),
+      maxHeight: customStyle(this.styles.scrollHeight, "none"),
       overflow: "auto",
     });
 
     recordingsPerTrack.forEach((recordings, trackIndex) => {
-      const isLastTrack = trackIndex === totalTracks - 1;
+      const isLastTrack = trackIndex === recordingsPerTrack.length - 1;
       const trackRow = createElement("div", "ihm-timeSlider-trackContainer-trackRow", {
         position: "relative",
         flexGrow: "1",
         height: `${this.trackHeight}px`,
-        border: "1px solid #ccc",
-        borderBottom: isLastTrack ? "1px solid #ccc" : "none",
+        border: `1px solid ${_styles[this.theme].borderColor}`,
+        borderBottom: isLastTrack ? `1px solid ${_styles[this.theme].borderColor}` : "none",
         display: "flex",
       });
 
@@ -214,11 +229,16 @@ export default class ihm_TimeSlider {
         alignItems: "center",
         justifyContent: "center",
         padding: "0 10px",
-        borderRight: "1px solid #ccc",
+        borderRight: `1px solid ${_styles[this.theme].borderColor}`,
       });
       infoContainer.innerHTML = `
-        <span style="font-size: 14px; color: #fff;">窗口${trackIndex + 1}</span>
+        <div class="">
+          <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">窗口${trackIndex + 1}</span>
+        </div>
+        <div>
+        </div>
       `;
+      // ${downloadSVG(this.flag, this.styles, this.theme)}
       trackRow.appendChild(infoContainer);
 
       // 外部拖拽容器
@@ -238,16 +258,16 @@ export default class ihm_TimeSlider {
         top: "0",
       });
 
-      // 在 renderTracks 中，为每个轨道添加黄色刻度线
+      // 在 renderTracks 中，为每个轨道添加刻度线
       const markerLine = createElement("div", "ihm-timeSlider-markerLine", {
         position: "absolute",
         top: "0",
         left: "0", // 初始位置
-        width: "1px",
+        width: customStyle(this.styles.markerLineWidth, "1px"),
         height: "100%",
-        zIndex: "2", // 确保在滑块上层
+        zIndex: 2025, // 确保在滑块上层
         pointerEvents: "none", // 防止事件阻挡
-        backgroundColor: "yellow",
+        backgroundColor: _styles[this.theme].markerLineColor,
       });
 
       sliderContainer.appendChild(markerLine);
@@ -257,7 +277,7 @@ export default class ihm_TimeSlider {
       // 重置黄色刻度线的位置并启动移动
       if (this.tracksInfoArr.length !== 0) {
         const info = this.tracksInfoArr[trackIndex];
-        console.log("info", info);
+        // console.log("info", info);
 
         if (info) {
           const { time: infoTime, criticalTime: infoCriticalTime } = info;
@@ -272,10 +292,10 @@ export default class ihm_TimeSlider {
         }
       }
 
-      const timeBlocks = createTimeBlocks(recordings, this.scaleWidth, this.scaleSeconds);
+      const recordingsExtInfo = extInfoArr[trackIndex];
+      const timeBlocks = createTimeBlocks(recordings, recordingsExtInfo, this.scaleWidth, this.scaleSeconds, this.theme);
 
       timeBlocks.forEach((block) => {
-        // console.log("block", block);
         const recordingSegment = createElement("div", null, {
           height: "100%",
           width: `${block.width}px`,
@@ -294,7 +314,7 @@ export default class ihm_TimeSlider {
 
             const time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleSeconds);
 
-            console.log("对应时间", time);
+            // console.log("对应时间", time);
 
             // 获取当前轨道的黄色刻度线，并移动到点击位置
             const markerLine = trackRow.markerLine;
@@ -310,7 +330,7 @@ export default class ihm_TimeSlider {
 
             // 触发双击事件回调
             if (this.onSegmentDblClick) {
-              this.onSegmentDblClick({ time, event });
+              this.onSegmentDblClick({ time, info: block.extInfo, event });
             }
           });
         }
@@ -353,7 +373,7 @@ export default class ihm_TimeSlider {
           time,
           criticalTime,
         };
-        console.log("Reached end of track", time);
+        // console.log("Reached end of track", time);
       } else {
         markerLine.style.left = `${newLeft}px`;
         const time = calculateTimeFromPosition(newLeft, this.scaleWidth, this.scaleSeconds);
@@ -361,7 +381,7 @@ export default class ihm_TimeSlider {
           time,
           criticalTime,
         };
-        console.log("time", time);
+        // console.log("time", time);
       }
     };
     // 立即执行一次
@@ -425,22 +445,26 @@ export default class ihm_TimeSlider {
     };
 
     // 滚轮事件
-    dragContainer.addEventListener("wheel", (e) => {
-      // 向上滚动：减小位置（时间轴向左移）
-      // 向下滚动：增加位置（时间轴向右移）
-      const scrollSpeed = e.deltaY > 0 ? 10 : -10; // 根据滚动方向设置速度
-      currentLeft += scrollSpeed;
+    dragContainer.addEventListener(
+      "wheel",
+      (e) => {
+        // 向上滚动：减小位置（时间轴向左移）
+        // 向下滚动：增加位置（时间轴向右移）
+        const scrollSpeed = e.deltaY > 0 ? 10 : -10; // 根据滚动方向设置速度
+        currentLeft += scrollSpeed;
 
-      // 限制滚动范围
-      const maxLeft = 0;
-      const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
-      currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
+        // 限制滚动范围
+        const maxLeft = 0;
+        const minLeft = dragContainer.offsetWidth - timelineContainer.offsetWidth;
+        currentLeft = Math.min(maxLeft, Math.max(minLeft, currentLeft));
 
-      timelineContainer.style.left = `${currentLeft}px`;
+        timelineContainer.style.left = `${currentLeft}px`;
 
-      // 同步其他元素的滚动
-      syncSliderPositions();
-    });
+        // 同步其他元素的滚动
+        syncSliderPositions();
+      },
+      { passive: true }
+    );
 
     dragContainer.addEventListener("mousedown", (e) => {
       isDragging = true;
@@ -483,11 +507,11 @@ export default class ihm_TimeSlider {
       position: "absolute",
       top: "0",
       left: "-9999px", // 初始隐藏
-      width: "1px",
+      width: customStyle(this.styles.markerLineHoverWidth, "1px"),
       height: "100%",
-      zIndex: 10,
+      zIndex: 2025,
       pointerEvents: "none",
-      backgroundColor: "red",
+      backgroundColor: _styles[this.theme].markerLineHoverColor,
     });
     sliderContainer.appendChild(timeIndicatorLine);
 
@@ -520,7 +544,7 @@ export default class ihm_TimeSlider {
         position: "absolute",
         top: "0",
         left: `${line_left - 18}px`,
-        color: "#fff",
+        color: "fff",
         fontSize: "10px",
       });
       // 添加到class为ihm-timeSlider-topbarContainer-dragContainer的元素中
@@ -535,14 +559,14 @@ export default class ihm_TimeSlider {
 
   // 切换到前一天
   prevDay() {
-    console.log("prevDay");
+    // console.log("prevDay");
     this.date.setDate(this.date.getDate() - 1);
     this.render();
   }
 
   // 切换到后一天
   nextDay() {
-    console.log("nextDay");
+    // console.log("nextDay");
     this.date.setDate(this.date.getDate() + 1);
     this.render();
   }
@@ -567,22 +591,22 @@ export default class ihm_TimeSlider {
       }
     }
 
-    console.log("tracksInfoArr", this.tracksInfoArr);
+    // console.log("tracksInfoArr", this.tracksInfoArr);
 
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
       this.scaleTime = scales[currentIndex + 1];
       this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
-      console.log("Zoomed In:", this.scaleTime, this.scaleSeconds);
+      // console.log("Zoomed In:", this.scaleTime, this.scaleSeconds);
       this.render();
     } else if (direction === "out" && currentIndex > 0) {
       // 缩小：切换到上一个更小的刻度
       this.scaleTime = scales[currentIndex - 1];
       this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
-      console.log("Zoomed Out:", this.scaleTime, this.scaleSeconds);
+      // console.log("Zoomed Out:", this.scaleTime, this.scaleSeconds);
       this.render();
     } else {
-      console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
+      // console.log(`Already at ${direction === "in" ? "maximum" : "minimum"} zoom level`);
     }
   }
 
