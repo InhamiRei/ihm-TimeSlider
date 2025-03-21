@@ -145,7 +145,7 @@ export const createTimeBlocks = (recordings, recordingsExtInfo, scaleWidth, scal
       start: formatSecondsToTime(startSeconds),
       end: formatSecondsToTime(endSeconds),
       width: calculateWidthInSeconds(startSeconds, endSeconds, scaleWidth, scaleSeconds),
-      color: "blue",
+      color: theme === "dark-theme" ? "#626773" : "#dbdee7",
       extInfo: recordingsExtInfo,
     });
 

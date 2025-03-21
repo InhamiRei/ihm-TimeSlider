@@ -226,7 +226,7 @@ export const demoData = [
       id: "3377172",
       channelCode: "00000000001311337717",
       deviceCode: "00000000001181337710",
-      name: "16.180大华nvr_1",
+      name: "大华nvr_1",
     },
     "2025-03-18": [
       {

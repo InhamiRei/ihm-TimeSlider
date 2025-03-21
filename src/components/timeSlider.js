@@ -2,7 +2,7 @@ import { _styles } from "../common/variable.js";
 import { createElement, createScale, createTimeBlocks, isDom, customStyle } from "../utils/common.js";
 import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG, downloadSVG, emptySVG } from "../common/svg.js";
-import { __styles_empty_container } from "../common/styles.js";
+import { __styles_emptyContainer, __styles_leftInfoContainer } from "../common/styles.js";
 
 export default class ihm_TimeSlider {
   constructor(config) {
@@ -51,6 +51,7 @@ export default class ihm_TimeSlider {
     this.onDateChange = null; // 日期变更回调
     this.onSegmentDblClick = config.dbClick || null; // 双击事件回调
     this.onSegmentContextMenu = config.rtClick || null; // 右键事件回调
+    this.onDownloadClick = config.download || null; // 添加下载按钮回调
 
     this.tracksContainer = null; // 轨道容器
     this.timeIndicatorText = null; // 时间指示文字
@@ -73,7 +74,7 @@ export default class ihm_TimeSlider {
     // console.log("extInfoArr", extInfoArr);
 
     // 创建时间轴容器
-    const mainContainer = createElement("div", "ihm-timeSlider-mainContainer", {
+    const mainContainer = createElement("div", `${this.flag}ihm-timeSlider-mainContainer`, {
       position: "relative",
       paddingLeft: `${this.padding.left}px`,
       paddingRight: `${this.padding.right}px`,
@@ -105,7 +106,8 @@ export default class ihm_TimeSlider {
       display: "flex",
     });
 
-    const infoContainer = createElement("div", "ihm-timeSlider-topbarContainer-info", {
+    // 左侧的时间和4个按钮
+    const timeAndButtonContainer = createElement("div", "ihm-timeSlider-topbarContainer-info", {
       position: "relative",
       width: "160px",
       minWidth: "160px",
@@ -115,14 +117,14 @@ export default class ihm_TimeSlider {
       borderRight: `1px solid ${_styles[this.theme].borderColor}`,
     });
 
-    infoContainer.innerHTML = `
+    timeAndButtonContainer.innerHTML = `
       ${plusSVG(this.flag, this.styles, this.theme)}
       ${prevDaySVG(this.flag, this.styles, this.theme)}
       <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">${this.date.toISOString().split("T")[0]}</span>
       ${nextDaySVG(this.flag, this.styles, this.theme)}
       ${minusSVG(this.flag, this.styles, this.theme)}
     `;
-    topbarContainer.appendChild(infoContainer);
+    topbarContainer.appendChild(timeAndButtonContainer);
 
     // 外部容器
     const dragContainer = createElement("div", "ihm-timeSlider-topbarContainer-dragContainer", {
@@ -213,7 +215,7 @@ export default class ihm_TimeSlider {
 
     // 如果没有数据，显示空状态
     if (!recordingsPerTrack || recordingsPerTrack.length === 0) {
-      const emptyContainer = createElement("div", `${this.flag}-ihm-timeSlider-empty`, __styles_empty_container(this.flag, this.styles, this.theme));
+      const emptyContainer = createElement("div", `${this.flag}-ihm-timeSlider-empty`, __styles_emptyContainer(this.flag, this.styles, this.theme));
 
       emptyContainer.innerHTML = `${emptySVG(this.flag, this.styles, this.theme)}`;
 
@@ -231,24 +233,40 @@ export default class ihm_TimeSlider {
         borderBottom: isLastTrack ? `1px solid ${_styles[this.theme].borderColor}` : "none",
         display: "flex",
       });
-
-      const infoContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-info", {
-        width: "160px",
-        minWidth: "160px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 10px",
-        borderRight: `1px solid ${_styles[this.theme].borderColor}`,
-      });
+      const infoContainer = createElement(
+        "div",
+        "ihm-timeSlider-trackContainer-trackRow-info",
+        __styles_leftInfoContainer(this.flag, this.styles, this.theme)
+      );
       infoContainer.innerHTML = `
-        <div class="">
-          <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">窗口${trackIndex + 1}</span>
-        </div>
-        <div>
+        <div class="" style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+          <div style="flex: 1; display: flex; justify-content: center;">
+            <span style="font-size: 14px; color: ${
+              _styles[this.theme].leftTextColor
+            }; max-width: calc(100% - 30px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${extInfoArr[trackIndex].name}</span>
+          </div>
+          <span class="${
+            this.flag
+          }-ihm-timeSlider-download-btn" style="width: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer">${downloadSVG(
+        this.flag,
+        this.styles,
+        this.theme
+      )}</span>
         </div>
       `;
-      // ${downloadSVG(this.flag, this.styles, this.theme)}
+
+      const downloadBtn = infoContainer.querySelector(`.${this.flag}-ihm-timeSlider-download-btn`);
+      if (downloadBtn) {
+        downloadBtn.addEventListener("click", (event) => {
+          if (this.onDownloadClick) {
+            this.onDownloadClick({
+              info: extInfoArr[trackIndex],
+              event,
+            });
+          }
+        });
+      }
+
       trackRow.appendChild(infoContainer);
 
       // 外部拖拽容器
@@ -312,8 +330,10 @@ export default class ihm_TimeSlider {
           backgroundColor: `${block.color}`,
         });
 
+        const themeBlockColor = this.theme === "dark-theme" ? "#626773" : "#dbdee7";
+
         // 只有蓝色的滑块需要绑定绑定事件
-        if (block.color === "blue") {
+        if (block.color === themeBlockColor) {
           recordingSegment.addEventListener("dblclick", (event) => {
             // 滑块容器距离左侧的距离
             const container_left = sliderContainer.getBoundingClientRect().left;

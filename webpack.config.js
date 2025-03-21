@@ -1,5 +1,36 @@
 // 引入 Node.js 自带的 path 模块，用于解析文件和目录路径
 const path = require("path");
+const fs = require("fs");
+const MoveFilePlugin = require("./scripts/moveFilePlugin");
+
+// 获取最新版本号
+const getLatestVersion = () => {
+  const logsDir = path.join(__dirname, "logs");
+  const versionFiles = fs
+    .readdirSync(logsDir)
+    .filter((file) => file.startsWith("v") && file.endsWith(".md"))
+    .sort()
+    .reverse();
+
+  if (versionFiles.length > 0) {
+    return versionFiles[0].replace(".md", "").substring(1);
+  }
+  return "1.0.0"; // 默认版本
+};
+
+// 获取格式化的时间戳 (YYYYMMDDHHmm)
+const getFormattedTimestamp = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${year}${month}${day}${hours}${minutes}`;
+};
+
+const version = getLatestVersion();
+const timestamp = getFormattedTimestamp();
 
 // 自定义模块
 module.exports = {
@@ -14,10 +45,9 @@ module.exports = {
   },
   // 定义入口文件，指定项目的主入口
   entry: {
-    // 定义一个名为 main 的入口，指向 ./src/index.js 文件， 可以是为 CommonJS 或 浏览器环境 定制的文件
-    main: "./src/index.js",
-    // 定义另一个名为 esm 的入口，也指向 ./src/index.js，可以是为 ES Module（现代模块系统）定制的文件
     esm: "./src/index.js",
+    main: "./src/index.js",
+    [`argesTimeLine-v${version}-${timestamp}`]: "./src/index.js",
   },
   // 定义输出文件的配置
   output: {
@@ -63,5 +93,5 @@ module.exports = {
     ],
   },
   // 配置插件列表
-  plugins: [],
+  plugins: [new MoveFilePlugin(version, timestamp)],
 };
