@@ -56,7 +56,8 @@ export default class ihm_TimeSlider {
     this.tracksContainer = null; // 轨道容器
     this.timeIndicatorText = null; // 时间指示文字
 
-    this.tracksInfoArr = []; // 轨道信息数组，用来还原黄色刻度线的位置
+    this.markerLineInfo = []; // 存储刻度线的数据，轨道信息数组，用来还原刻度线的位置
+    this.markerLineInstance = {}; // 存储刻度线的实例，不会经常变化
 
     this.render();
   }
@@ -74,7 +75,7 @@ export default class ihm_TimeSlider {
     // console.log("extInfoArr", extInfoArr);
 
     // 创建时间轴容器
-    const mainContainer = createElement("div", `${this.flag}ihm-timeSlider-mainContainer`, {
+    const mainContainer = createElement("div", `${this.flag}-ihm-timeSlider-mainContainer`, {
       position: "relative",
       paddingLeft: `${this.padding.left}px`,
       paddingRight: `${this.padding.right}px`,
@@ -98,7 +99,7 @@ export default class ihm_TimeSlider {
 
   // 创建时间刻度
   renderTopbar() {
-    const topbarContainer = createElement("div", "ihm-timeSlider-topbarContainer", {
+    const topbarContainer = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer`, {
       position: "relative",
       height: customStyle(this.styles.headerHeight, "30px"),
       border: `1px solid ${_styles[this.theme].borderColor}`,
@@ -107,7 +108,7 @@ export default class ihm_TimeSlider {
     });
 
     // 左侧的时间和4个按钮
-    const timeAndButtonContainer = createElement("div", "ihm-timeSlider-topbarContainer-info", {
+    const timeAndButtonContainer = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer-info`, {
       position: "relative",
       width: "160px",
       minWidth: "160px",
@@ -127,14 +128,14 @@ export default class ihm_TimeSlider {
     topbarContainer.appendChild(timeAndButtonContainer);
 
     // 外部容器
-    const dragContainer = createElement("div", "ihm-timeSlider-topbarContainer-dragContainer", {
+    const dragContainer = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer-dragContainer`, {
       position: "relative",
       overflow: "hidden", // 隐藏超出的内容
       flexGrow: 1,
       height: "100%",
     });
 
-    const timelineContainer = createElement("div", "ihm-timeSlider-topbarContainer-timeline", {
+    const timelineContainer = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`, {
       position: "absolute",
       display: "flex",
       alignItems: "center",
@@ -155,7 +156,7 @@ export default class ihm_TimeSlider {
         x = this.scaleWidth;
       }
 
-      const scaleBlock = createElement("div", "", {
+      const scaleBlock = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock`, {
         position: "relative",
         display: "flex",
         alignItems: "center",
@@ -176,11 +177,18 @@ export default class ihm_TimeSlider {
           : customStyle(this.styles.headerNormalTextMargin, "-15px");
 
       scaleBlock.innerHTML = `
-        <span style="user-select: none; margin-left: ${marginLeft};">${scaleArr[i].slice(0, 5)}</span>
-        <div style="width: ${customStyle(this.styles.headerFontSize, "1px")}; height: ${customStyle(
+        <span class="${
+          this.flag
+        }-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-span" style="user-select: none; margin-left: ${marginLeft};">${scaleArr[i].slice(
+        0,
+        5
+      )}</span>
+        <div class="${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-axis" style="width: ${customStyle(
         this.styles.headerFontSize,
-        "4px"
-      )}; background-color: ${_styles[this.theme].headerTextColor}; position: absolute; left: 0; bottom: 0;"></div>
+        "1px"
+      )}; height: ${customStyle(this.styles.headerFontSize, "4px")}; background-color: ${
+        _styles[this.theme].headerAxisColor
+      }; position: absolute; left: 0; bottom: 0;"></div>
       `;
 
       timelineContainer.appendChild(scaleBlock);
@@ -207,7 +215,7 @@ export default class ihm_TimeSlider {
       }
     }
 
-    this.tracksContainer = createElement("div", "ihm-timeSlider-trackContainer", {
+    this.tracksContainer = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer`, {
       position: "relative",
       maxHeight: customStyle(this.styles.scrollHeight, "none"),
       overflow: "auto",
@@ -224,18 +232,20 @@ export default class ihm_TimeSlider {
     }
 
     recordingsPerTrack.forEach((recordings, trackIndex) => {
+      // console.log("trackIndex", trackIndex);
       const isLastTrack = trackIndex === recordingsPerTrack.length - 1;
-      const trackRow = createElement("div", "ihm-timeSlider-trackContainer-trackRow", {
+      const trackRow = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer-trackRow`, {
         position: "relative",
         flexGrow: "1",
         height: `${this.trackHeight}px`,
         border: `1px solid ${_styles[this.theme].borderColor}`,
         borderBottom: isLastTrack ? `1px solid ${_styles[this.theme].borderColor}` : "none",
         display: "flex",
+        backgroundColor: _styles[this.theme].trackBackgroundColor,
       });
       const infoContainer = createElement(
         "div",
-        "ihm-timeSlider-trackContainer-trackRow-info",
+        `${this.flag}-ihm-timeSlider-trackContainer-trackRow-info`,
         __styles_leftInfoContainer(this.flag, this.styles, this.theme)
       );
       infoContainer.innerHTML = `
@@ -270,14 +280,14 @@ export default class ihm_TimeSlider {
       trackRow.appendChild(infoContainer);
 
       // 外部拖拽容器
-      const dragContainer = createElement("div", "ihm-timeSlider-trackContainer-dragContainer", {
+      const dragContainer = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer-dragContainer`, {
         position: "relative",
         overflow: "hidden", // 隐藏超出的内容
         flexGrow: 1,
         height: "100%",
       });
 
-      const sliderContainer = createElement("div", "ihm-timeSlider-trackContainer-trackRow-slider", {
+      const sliderContainer = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider`, {
         position: "absolute",
         display: "flex",
         alignItems: "center",
@@ -287,7 +297,7 @@ export default class ihm_TimeSlider {
       });
 
       // 在 renderTracks 中，为每个轨道添加刻度线
-      const markerLine = createElement("div", "ihm-timeSlider-markerLine", {
+      const markerLine = createElement("div", `${this.flag}-ihm-timeSlider-markerLine`, {
         position: "absolute",
         top: "0",
         left: "0", // 初始位置
@@ -299,12 +309,12 @@ export default class ihm_TimeSlider {
       });
 
       sliderContainer.appendChild(markerLine);
-      // 保存黄色刻度线引用到每个轨道
+      // 保存刻度线引用到每个轨道
       trackRow.markerLine = markerLine;
 
-      // 重置黄色刻度线的位置并启动移动
-      if (this.tracksInfoArr.length !== 0) {
-        const info = this.tracksInfoArr[trackIndex];
+      // 重置刻度线的位置并启动移动
+      if (this.markerLineInfo.length !== 0) {
+        const info = this.markerLineInfo[trackIndex];
         // console.log("info", info);
 
         if (info) {
@@ -315,16 +325,17 @@ export default class ihm_TimeSlider {
 
           markerLine.style.left = `${newLeft}px`;
 
-          // 启动黄色刻度线的移动
+          // 启动刻度线的移动
           this.startMarkerMovement(markerLine, newCritical, infoCriticalTime);
         }
       }
 
+      // 渲染时间块
       const recordingsExtInfo = extInfoArr[trackIndex];
       const timeBlocks = createTimeBlocks(recordings, recordingsExtInfo, this.scaleWidth, this.scaleSeconds, this.theme);
 
       timeBlocks.forEach((block) => {
-        const recordingSegment = createElement("div", null, {
+        const recordingSegment = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider-block`, {
           height: "100%",
           width: `${block.width}px`,
           backgroundColor: `${block.color}`,
@@ -357,7 +368,7 @@ export default class ihm_TimeSlider {
 
             // console.log("对应时间", time);
 
-            // 获取当前轨道的黄色刻度线，并移动到点击位置
+            // 获取当前轨道的刻度线，并移动到点击位置
             const markerLine = trackRow.markerLine;
             markerLine.style.left = `${block_left}px`;
 
@@ -366,7 +377,7 @@ export default class ihm_TimeSlider {
             const critical = blueBlock_width + blueBlock_left - container_left;
             const criticalTime = block.end;
 
-            // 启动黄色刻度线的移动
+            // 启动刻度线的移动
             this.startMarkerMovement(markerLine, critical, criticalTime);
 
             // 触发双击事件回调
@@ -388,7 +399,7 @@ export default class ihm_TimeSlider {
     return this.tracksContainer;
   }
 
-  // 黄色刻度线开始移动
+  // 刻度线开始移动
   startMarkerMovement(markerLine, critical, criticalTime) {
     // 清除已有的定时器，防止重复启动（虽然我在前面已经清理过了）
     if (markerLine.movementInterval) {
@@ -400,6 +411,10 @@ export default class ihm_TimeSlider {
     const pixelsPerSecond = this.scaleWidth / this.scaleSeconds; // 每秒钟移动的像素
 
     const executeMovement = () => {
+      // 如果有暂停就不执行
+      const isPaused = markerLine.isPaused;
+      if (isPaused) return;
+
       const currentLeft = parseFloat(markerLine.style.left) || 0;
       const newLeft = currentLeft + pixelsPerSecond; // 每秒移动对应的像素
 
@@ -429,6 +444,20 @@ export default class ihm_TimeSlider {
     executeMovement();
     // 每秒执行一次
     markerLine.movementInterval = setInterval(executeMovement, 1000);
+  }
+
+  // 刻度线暂停移动
+  pauseMarkerMovement(markerLine) {
+    if (markerLine && !markerLine.isPaused) {
+      markerLine.isPaused = true;
+    }
+  }
+
+  // 刻度线恢复移动
+  resumeMarkerMovement(markerLine) {
+    if (markerLine && markerLine.isPaused) {
+      markerLine.isPaused = false;
+    }
   }
 
   // 绑定事件
@@ -577,11 +606,12 @@ export default class ihm_TimeSlider {
     });
   }
 
+  // 更新时间显示
   updateTimeDisplay(time, line_left) {
-    this.timeIndicatorText = document.querySelector(".ihm-timeSlider-timeDisplay");
+    this.timeIndicatorText = document.querySelector(`.${this.flag}-ihm-timeSlider-timeDisplay`);
 
     if (!this.timeIndicatorText) {
-      this.timeIndicatorText = createElement("div", "ihm-timeSlider-timeDisplay", {
+      this.timeIndicatorText = createElement("div", `${this.flag}-ihm-timeSlider-timeDisplay`, {
         position: "absolute",
         top: "0",
         left: `${line_left - 18}px`,
@@ -589,7 +619,7 @@ export default class ihm_TimeSlider {
         fontSize: "10px",
       });
       // 添加到class为ihm-timeSlider-topbarContainer-dragContainer的元素中
-      const timelineContainer = this.container.querySelector(".ihm-timeSlider-topbarContainer-timeline");
+      const timelineContainer = this.container.querySelector(`.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`);
       timelineContainer.appendChild(this.timeIndicatorText);
     } else {
       this.timeIndicatorText.style.left = `${line_left - 18}px`;
@@ -622,17 +652,15 @@ export default class ihm_TimeSlider {
       .sort((a, b) => a - b); // 获取所有刻度并排序
     const currentIndex = scales.indexOf(this.scaleTime); // 找到当前刻度的索引
 
-    this.tracksInfoArr = [];
+    this.markerLineInfo = [];
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
         const track = this.tracksContainer.children[i];
         if (track.markerLine) {
-          this.tracksInfoArr.push(track.markerLine.info);
+          this.markerLineInfo.push(track.markerLine.info);
         }
       }
     }
-
-    // console.log("tracksInfoArr", this.tracksInfoArr);
 
     if (direction === "in" && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
@@ -656,11 +684,117 @@ export default class ihm_TimeSlider {
     this.onDateChange = callback;
   }
 
+  // 修改模式: 亮色模式 / 暗色模式
+  setTheme(theme) {
+    // console.log("theme", theme);
+    // 先替换主题变量
+    if (theme !== "light-theme" && theme !== "dark-theme") return;
+    this.theme = theme;
+
+    // 更新所有使用主题颜色的元素
+    const mainContainer = this.container.querySelector(`.${this.flag}-ihm-timeSlider-mainContainer`);
+
+    // console.log("this.container", this.container);
+    // console.log("mainContainer", mainContainer);
+    if (!mainContainer) return;
+
+    // 更新顶部容器边框
+    const topbarContainer = mainContainer.querySelector(`.${this.flag}-ihm-timeSlider-topbarContainer`);
+    if (topbarContainer) {
+      topbarContainer.style.border = `1px solid ${_styles[theme].borderColor}`;
+      topbarContainer.style.borderBottom = "none"; // 保持底部边框为空
+    }
+
+    // 更新左侧信息容器边框
+    const timeAndButtonContainer = mainContainer.querySelector(`.${this.flag}-ihm-timeSlider-topbarContainer-info`);
+    if (timeAndButtonContainer) {
+      timeAndButtonContainer.style.borderRight = `1px solid ${_styles[theme].borderColor}`;
+    }
+
+    // 更新日期文本颜色
+    const dateText = timeAndButtonContainer && timeAndButtonContainer.querySelector("span");
+    if (dateText) {
+      dateText.style.color = _styles[theme].leftTextColor;
+    }
+
+    // 更新轨道容器边框
+    const trackRows = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-trackContainer-trackRow`);
+    trackRows.forEach((row, index) => {
+      const isLastTrack = index === trackRows.length - 1;
+      row.style.border = `1px solid ${_styles[theme].borderColor}`;
+      row.style.borderBottom = isLastTrack ? `1px solid ${_styles[theme].borderColor}` : "none";
+      row.style.backgroundColor = _styles[theme].trackBackgroundColor;
+    });
+
+    // 更新轨道名称左侧信息
+    const trackInfo = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-trackContainer-trackRow-info`);
+    trackInfo.forEach((info) => {
+      info.style.borderRight = `1px solid ${_styles[theme].borderColor}`;
+    });
+
+    // 更新轨道名称左侧信息文本
+    const trackNames = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-trackContainer-trackRow-info span`);
+    trackNames.forEach((name) => {
+      name.style.color = _styles[theme].leftTextColor;
+    });
+
+    // 更新刻度文本和背景颜色
+    const scaleBlocks = mainContainer.querySelectorAll(
+      `.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis > .${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock`
+    );
+    // console.log("scaleBlocks", scaleBlocks);
+    scaleBlocks.forEach((block) => {
+      block.style.backgroundColor = _styles[theme].headerBackgroundColor;
+      block.style.color = _styles[theme].headerTextColor;
+      const scaleText = block.querySelector("span");
+      if (scaleText) {
+        scaleText.style.color = _styles[theme].headerTextColor;
+      }
+      const scaleAxis = block.querySelector("div");
+      if (scaleAxis) {
+        scaleAxis.style.backgroundColor = _styles[theme].headerAxisColor;
+      }
+    });
+
+    // 更新图标颜色
+    const svgPaths = mainContainer.querySelectorAll("svg path");
+    svgPaths.forEach((path) => {
+      path.setAttribute("fill", _styles[theme].iconColor);
+    });
+
+    // 更新时间指示线颜色
+    // const timeMarkers = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-timeMarker`);
+    // timeMarkers.forEach((marker) => {
+    //   marker.style.backgroundColor = _styles[theme].markerLineHoverColor;
+    // });
+
+    // 更新时间轴块的背景颜色
+    const timeBlocks = mainContainer.querySelectorAll(
+      `.${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider > .${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider-block`
+    );
+    timeBlocks.forEach((block) => {
+      const currentBgColor = window.getComputedStyle(block).backgroundColor;
+      // 只更新非透明背景的块
+      if (currentBgColor !== "transparent" && currentBgColor !== "rgba(0, 0, 0, 0)") {
+        block.style.backgroundColor = theme === "dark-theme" ? "#626773" : "#dbdee7";
+      }
+    });
+
+    // 更新空状态图标
+    const emptyContainer = mainContainer.querySelector(`.${this.flag}-ihm-timeSlider-empty`);
+    // console.log("emptyContainer", emptyContainer);
+    if (emptyContainer) {
+      emptyContainer.style.border = `1px solid ${_styles[theme].borderColor}`;
+      emptyContainer.innerHTML = emptySVG(this.flag, this.styles, theme);
+    }
+  }
+
+  // 销毁
   destroy() {
     // 清除容器中的内容
     this.container.innerHTML = "";
 
-    // 清理所有轨道上的黄色刻度线的定时器
+    // 清理所有轨道上的刻度线的定时器
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
         const track = this.tracksContainer.children[i];

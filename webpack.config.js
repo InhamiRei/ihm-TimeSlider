@@ -47,7 +47,7 @@ module.exports = {
   entry: {
     esm: "./src/index.js",
     main: "./src/index.js",
-    [`argesTimeLine-v${version}-${timestamp}`]: "./src/index.js",
+    // [`argesTimeLine-v${version}-${timestamp}`]: "./src/index.js",
   },
   // 定义输出文件的配置
   output: {
