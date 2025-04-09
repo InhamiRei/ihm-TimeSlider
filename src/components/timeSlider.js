@@ -446,17 +446,47 @@ export default class ihm_TimeSlider {
     markerLine.movementInterval = setInterval(executeMovement, 1000);
   }
 
-  // 刻度线暂停移动
-  pauseMarkerMovement(markerLine) {
-    if (markerLine && !markerLine.isPaused) {
-      markerLine.isPaused = true;
+  // 刻度线停止移动
+  stopMarkLine(trackIndex) {
+    if (!this.tracksContainer || !this.tracksContainer.children) return;
+
+    // 如果没有指定索引，则停止所有轨道的刻度线
+    if (trackIndex === undefined) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine) {
+          track.markerLine.isPaused = true;
+        }
+      }
+      return;
+    }
+
+    // 获取指定索引的轨道
+    const track = this.tracksContainer.children[trackIndex];
+    if (track && track.markerLine) {
+      track.markerLine.isPaused = true;
     }
   }
 
   // 刻度线恢复移动
-  resumeMarkerMovement(markerLine) {
-    if (markerLine && markerLine.isPaused) {
-      markerLine.isPaused = false;
+  resumeMarkLine(trackIndex) {
+    if (!this.tracksContainer || !this.tracksContainer.children) return;
+
+    // 如果没有指定索引，则启动所有轨道的刻度线
+    if (trackIndex === undefined) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine) {
+          track.markerLine.isPaused = false;
+        }
+      }
+      return;
+    }
+
+    // 获取指定索引的轨道
+    const track = this.tracksContainer.children[trackIndex];
+    if (track && track.markerLine) {
+      track.markerLine.isPaused = false;
     }
   }
 

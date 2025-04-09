@@ -1,8 +1,7 @@
 import { rawData, demoData } from "./rawData.js";
 import ihm_TimeSlider from "../components/timeSlider.js";
 
-// console.log("rawData", rawData);
-
+// 处理rawData数据的方法
 const transformData = (data) => {
   return data.reduce((acc, item) => {
     const date = item.startTime.split(" ")[0]; // 获取日期部分
@@ -16,11 +15,8 @@ const transformData = (data) => {
     return acc;
   }, {});
 };
-
 const data = transformData(rawData);
-
-// console.log("data", data);
-
+// 配置项
 const config = {
   container: document.getElementById("timeSlider"),
   curDay: "2025-03-19",
@@ -48,18 +44,30 @@ const config = {
 // 初始化时间轴组件
 const timeline = new ihm_TimeSlider(config);
 
-// 亮色模式按钮
-window.lightBtnFunc = () => {
-  document.body.classList.remove("dark-theme");
-  document.body.classList.add("light-theme");
-  // 更新时间轴的主题
-  timeline.setTheme("light-theme");
+// 切换亮色模式和深色模式
+window.changeTheme = (theme) => {
+  if (theme === "light-theme") {
+    document.body.classList.remove("dark-theme");
+    document.body.classList.add("light-theme");
+    // 更新时间轴的主题
+    timeline.setTheme("light-theme");
+  } else if (theme === "dark-theme") {
+    document.body.classList.remove("light-theme");
+    document.body.classList.add("dark-theme");
+    // 更新时间轴的主题
+    timeline.setTheme("dark-theme");
+  } else {
+    return; // 不支持的主题，不做任何操作
+  }
 };
 
-// 暗色模式按钮
-window.darkBtnFunc = () => {
-  document.body.classList.remove("light-theme");
-  document.body.classList.add("dark-theme");
-  // 更新时间轴的主题
-  timeline.setTheme("dark-theme");
+// 刻度线的操作
+window.markLineOperate = (action) => {
+  if (action === "resume") {
+    timeline.resumeMarkLine();
+  } else if (action === "stop") {
+    timeline.stopMarkLine();
+  } else {
+    return; // 不支持的操作，不做任何操作
+  }
 };
