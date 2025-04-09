@@ -71,3 +71,9 @@ window.markLineOperate = (action) => {
     return; // 不支持的操作，不做任何操作
   }
 };
+
+// 获取时间轴信息
+window.getTimeLineInfo = () => {
+  const info = timeline.getInfo();
+  console.log("info", info);
+};

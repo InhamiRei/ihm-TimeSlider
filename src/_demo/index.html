@@ -9,10 +9,11 @@
   <body class="light-theme">
     <div id="timeSlider" class="timeSlider"></div>
     <div class="operate">
+      <button onclick="getTimeLineInfo()">获取时间轴信息</button>
       <button onclick="changeTheme('light-theme')">亮色模式</button>
       <button onclick="changeTheme('dark-theme')">暗黑模式</button>
       <button onclick="markLineOperate('stop')">刻度线停止移动</button>
-      <button onclick="markLineOperate('stresumert')">刻度线恢复移动</button>
+      <button onclick="markLineOperate('resume')">刻度线恢复移动</button>
     </div>
     <script type="module" src="./index.js"></script>
   </body>

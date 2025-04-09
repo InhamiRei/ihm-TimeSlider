@@ -1,5 +1,5 @@
 import { _styles } from "../common/variable.js";
-import { createElement, createScale, createTimeBlocks, isDom, customStyle } from "../utils/common.js";
+import { createElement, createScale, createTimeBlocks, isDom, customStyle, generateTimeObj } from "../utils/common.js";
 import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
 import { plusSVG, prevDaySVG, nextDaySVG, minusSVG, downloadSVG, emptySVG } from "../common/svg.js";
 import { __styles_emptyContainer, __styles_leftInfoContainer } from "../common/styles.js";
@@ -355,16 +355,7 @@ export default class ihm_TimeSlider {
 
             let time = calculateTimeFromPosition(block_left, this.scaleWidth, this.scaleSeconds);
 
-            const timeObj = {
-              // 2025-03-20
-              day: new Date(this.date).toISOString().split("T")[0],
-              // 2025-03-21
-              nextDay: new Date(new Date(this.date).setDate(new Date(this.date).getDate() + 1)).toISOString().split("T")[0],
-              // 2025-03-20 15:00
-              time: this.date.toISOString().split("T")[0] + " " + time,
-              // 2025-03-21 15:00
-              nextTime: new Date(new Date(this.date).setDate(new Date(this.date).getDate() + 1)).toISOString().split("T")[0] + " " + time,
-            };
+            const timeObj = generateTimeObj(this.date, time);
 
             // console.log("对应时间", time);
 
@@ -817,6 +808,46 @@ export default class ihm_TimeSlider {
       emptyContainer.style.border = `1px solid ${_styles[theme].borderColor}`;
       emptyContainer.innerHTML = emptySVG(this.flag, this.styles, theme);
     }
+  }
+
+  // 获取时间轴的信息
+  getInfo() {
+    const info = {
+      date: this.date.toISOString().split("T")[0], // 当前显示的日期
+      tracks: [],
+      scaleTime: this.scaleTime,
+      scaleSeconds: this.scaleSeconds,
+    };
+
+    // 如果轨道容器不存在，直接返回基本信息
+    if (!this.tracksContainer || !this.tracksContainer.children) {
+      return info;
+    }
+
+    // 遍历所有轨道，收集信息
+    for (let i = 0; i < this.tracksContainer.children.length; i++) {
+      const track = this.tracksContainer.children[i];
+      const trackInfo = {
+        index: i,
+        extInfo: this.data[i]?.extInfo || {},
+      };
+
+      // 获取刻度线信息
+      if (track.markerLine) {
+        const markerLeft = parseFloat(track.markerLine.style.left) || 0;
+        const currentTime = calculateTimeFromPosition(markerLeft, this.scaleWidth, this.scaleSeconds);
+
+        trackInfo.marker = {
+          position: markerLeft,
+          isPaused: track.markerLine.isPaused || false,
+          ...generateTimeObj(this.date, currentTime),
+        };
+      }
+
+      info.tracks.push(trackInfo);
+    }
+
+    return info;
   }
 
   // 销毁
