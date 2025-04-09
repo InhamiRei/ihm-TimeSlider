@@ -1,5 +1,5 @@
 // 版本
-export const _version = "1.0.4 - 202504091620";
+export const _version = "1.0.4 - 202504091650";
 
 // 样式
 export const _styles = {
@@ -17,6 +17,8 @@ export const _styles = {
     headerTextColor: "#6f6f6f",
     // 头部刻度线的刻度颜色
     headerAxisColor: "#d2d4d9",
+    // hover时间块，刻度轴上显示的时间文本颜色timeMarker
+    headerTimeMarkerColor: "#33353b",
     // track的背景颜色
     trackBackgroundColor: "#f5f6f9",
     // 时间轴的markerLine的颜色
@@ -39,6 +41,8 @@ export const _styles = {
     headerTextColor: "#c7c7c7",
     // 头部刻度线的刻度颜色
     headerAxisColor: "#9b9ea6",
+    // hover时间块，刻度轴上显示的时间文本颜色timeMarker
+    headerTimeMarkerColor: "#f0f3ff",
     // track的背景颜色
     trackBackgroundColor: "#494c5b",
     // 时间轴的markerLine的颜色

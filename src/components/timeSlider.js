@@ -603,7 +603,7 @@ export default class ihm_TimeSlider {
   // 绑定轨道hover事件
   bindHoverEvents(sliderContainer) {
     // 创建并添加时间指示线
-    const timeIndicatorLine = createElement("div", "ihm-timeSlider-timeMarker", {
+    const timeIndicatorLine = createElement("div", `${this.flag}-ihm-timeSlider-timeMarker`, {
       position: "absolute",
       top: "0",
       left: "-9999px", // 初始隐藏
@@ -645,7 +645,7 @@ export default class ihm_TimeSlider {
         position: "absolute",
         top: "0",
         left: `${line_left - 18}px`,
-        color: "fff",
+        color: _styles[this.theme].headerTimeMarkerColor,
         fontSize: "10px",
       });
       // 添加到class为ihm-timeSlider-topbarContainer-dragContainer的元素中
@@ -792,11 +792,11 @@ export default class ihm_TimeSlider {
       path.setAttribute("fill", _styles[theme].iconColor);
     });
 
-    // 更新时间指示线颜色
-    // const timeMarkers = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-timeMarker`);
-    // timeMarkers.forEach((marker) => {
-    //   marker.style.backgroundColor = _styles[theme].markerLineHoverColor;
-    // });
+    // 更新刻度轴上显示的时间文本颜色timeMarker
+    const timeMarker = mainContainer.querySelectorAll(`.${this.flag}-ihm-timeSlider-timeDisplay`);
+    timeMarker.forEach((marker) => {
+      marker.style.color = _styles[theme].headerTimeMarkerColor;
+    });
 
     // 更新时间轴块的背景颜色
     const timeBlocks = mainContainer.querySelectorAll(
