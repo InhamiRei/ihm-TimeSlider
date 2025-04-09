@@ -829,7 +829,7 @@ export default class ihm_TimeSlider {
       const track = this.tracksContainer.children[i];
       const trackInfo = {
         index: i,
-        extInfo: this.data[i]?.extInfo || {},
+        extInfo: (this.data[i] && this.data[i].extInfo) || {},
       };
 
       // 获取刻度线信息
