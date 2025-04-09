@@ -517,7 +517,7 @@ export default class ihm_TimeSlider {
 
     const syncSliderPositions = () => {
       // 找到页面中所有classname为 "ihm-timeSlider-trackContainer-trackRow-slider" 的元素
-      const sliders = document.querySelectorAll(".ihm-timeSlider-trackContainer-trackRow-slider");
+      const sliders = document.querySelectorAll(`.${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider`);
       sliders.forEach((slider) => {
         slider.style.left = `${currentLeft}px`;
       });

@@ -1,5 +1,5 @@
 // 版本
-export const _version = "1.0.4 - Beta - 202504030850";
+export const _version = "1.0.4 - 202504091620";
 
 // 样式
 export const _styles = {
