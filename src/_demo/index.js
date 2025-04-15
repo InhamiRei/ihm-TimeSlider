@@ -1,5 +1,5 @@
 import { rawData, demoData } from "./rawData.js";
-import ihm_TimeSlider from "../components/timeSlider.js";
+import ihm_TimeSlider from "../components/TimeSlider.js";
 
 // 处理rawData数据的方法
 const transformData = (data) => {
