@@ -121,11 +121,19 @@ export default class ihm_TimeSlider {
     timeAndButtonContainer.innerHTML = `
       ${plusSVG(this.flag, this.styles, this.theme)}
       ${prevDaySVG(this.flag, this.styles, this.theme)}
-      <span style="font-size: 14px; color: ${_styles[this.theme].leftTextColor};">${this.date.toISOString().split("T")[0]}</span>
+      <span class="${this.flag}-ihm-timeSlider-date" style="font-size: 14px; color: ${_styles[this.theme].leftTextColor}; cursor: pointer;">${this.date.toISOString().split("T")[0]}</span>
       ${nextDaySVG(this.flag, this.styles, this.theme)}
       ${minusSVG(this.flag, this.styles, this.theme)}
     `;
     topbarContainer.appendChild(timeAndButtonContainer);
+
+    // 绑定日期点击事件
+    const dateSpan = timeAndButtonContainer.querySelector(`.${this.flag}-ihm-timeSlider-date`);
+    if (dateSpan) {
+      dateSpan.addEventListener("click", () => {
+        this.showTimeSelector();
+      });
+    }
 
     // 外部容器
     const dragContainer = createElement("div", `${this.flag}-ihm-timeSlider-topbarContainer-dragContainer`, {
@@ -334,7 +342,7 @@ export default class ihm_TimeSlider {
       const recordingsExtInfo = extInfoArr[trackIndex];
       const timeBlocks = createTimeBlocks(recordings, recordingsExtInfo, this.scaleWidth, this.scaleSeconds, this.theme);
 
-      timeBlocks.forEach((block) => {
+      timeBlocks.forEach((block, blockIndex) => {
         const recordingSegment = createElement("div", `${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider-block`, {
           height: "100%",
           width: `${block.width}px`,
@@ -374,6 +382,53 @@ export default class ihm_TimeSlider {
             // 触发双击事件回调
             if (this.onSegmentDblClick) {
               this.onSegmentDblClick({ ...timeObj, info: block.extInfo, event });
+            }
+          });
+        }
+        // 为无色模块添加点击事件
+        else if (block.color === "transparent") {
+          recordingSegment.addEventListener("click", (event) => {
+            // 寻找下一个蓝色模块
+            let nextBlueBlockIndex = -1;
+            for (let i = blockIndex + 1; i < timeBlocks.length; i++) {
+              if (timeBlocks[i].color === themeBlockColor) {
+                nextBlueBlockIndex = i;
+                break;
+              }
+            }
+
+            // 如果找到下一个蓝色模块
+            if (nextBlueBlockIndex !== -1) {
+              const nextBlueBlock = timeBlocks[nextBlueBlockIndex];
+
+              // 获取容器左侧距离
+              const container_left = sliderContainer.getBoundingClientRect().left;
+
+              // 计算下一个蓝色模块的左边位置
+              const nextBlueBlock_left = calculatePositionFromTime(nextBlueBlock.start, this.scaleWidth, this.scaleSeconds);
+
+              // 获取对应时间
+              const time = nextBlueBlock.start;
+              const timeObj = generateTimeObj(this.date, time);
+
+              // 获取当前轨道的刻度线，并移动到下一个蓝色模块左侧
+              const markerLine = trackRow.markerLine;
+              markerLine.style.left = `${nextBlueBlock_left}px`;
+
+              // 计算临界宽度
+              const critical = calculatePositionFromTime(nextBlueBlock.end, this.scaleWidth, this.scaleSeconds);
+              const criticalTime = nextBlueBlock.end;
+
+              // 启动刻度线的移动
+              this.startMarkerMovement(markerLine, critical, criticalTime);
+
+              // 触发双击事件回调
+              if (this.onSegmentDblClick) {
+                this.onSegmentDblClick({ ...timeObj, info: nextBlueBlock.extInfo, event });
+              }
+            } else {
+              // 如果右边没有蓝色模块，则打印提示
+              console.log("无蓝色模块");
             }
           });
         }
