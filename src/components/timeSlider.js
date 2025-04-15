@@ -62,6 +62,7 @@ export default class ihm_TimeSlider {
     this.markerLineInstance = {}; // 存储刻度线的实例，不会经常变化
 
     this.render();
+    this._addResizeListener();
   }
 
   // 主渲染方法
@@ -247,28 +248,59 @@ export default class ihm_TimeSlider {
     return info;
   }
 
+  // 监听窗口变化
+  _addResizeListener() {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      // 当容器大小变化时重新计算尺寸并更新UI
+      this.timelineWidth = this.container.offsetWidth - this.padding.left - this.padding.right - 2;
+      this.timelineHeight = this.container.offsetHeight - this.padding.top - this.padding.bottom;
+      this.render();
+    });
+
+    this.resizeObserver.observe(this.container);
+  }
+
   // 销毁
   destroy() {
-    // 清除容器中的内容
-    this.container.innerHTML = "";
-
-    // 清理所有轨道上的刻度线的定时器
+    // 清理所有的定时器/动画帧
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
         const track = this.tracksContainer.children[i];
-        if (track.markerLine && track.markerLine.movementInterval) {
-          clearInterval(track.markerLine.movementInterval);
-          track.markerLine.movementInterval = null;
+        if (track.markerLine) {
+          // 清除定时器
+          if (track.markerLine.movementInterval) {
+            clearInterval(track.markerLine.movementInterval);
+            track.markerLine.movementInterval = null;
+          }
+
+          // 清除动画帧
+          if (track.markerLine.animationFrameId) {
+            cancelAnimationFrame(track.markerLine.animationFrameId);
+            track.markerLine.animationFrameId = null;
+          }
         }
       }
     }
 
-    // 清空引用，防止内存泄漏
-    this.container = null;
+    // 移除事件监听器
+    const downloadBtns = this.container.querySelectorAll(`.${this.flag}-ihm-timeSlider-download-btn`);
+    downloadBtns.forEach((btn) => {
+      btn.removeEventListener("click", this.onDownloadClick);
+    });
+
+    // 移除resize观察器
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
+    // 清空容器
+    this.container.innerHTML = "";
+
+    // 清空引用
     this.tracksContainer = null;
     this.timeIndicatorText = null;
-    this.onDateChange = null;
-    this.onSegmentDblClick = null;
-    this.onSegmentContextMenu = null;
+    this.markerLineInfo = [];
+    this.markerLineInstance = {};
   }
 }

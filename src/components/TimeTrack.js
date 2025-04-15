@@ -159,7 +159,7 @@ export function createTrack(config) {
     }
     // 为无色模块添加点击事件
     else if (block.color === "transparent") {
-      recordingSegment.addEventListener("click", (event) => {
+      recordingSegment.addEventListener("dblclick", (event) => {
         // 寻找下一个蓝色模块
         let nextBlueBlockIndex = -1;
         for (let i = blockIndex + 1; i < timeBlocks.length; i++) {
@@ -282,6 +282,9 @@ export function createTracks(config) {
     }
   }
 
+  // 使用文档片段来减少DOM操作次数
+  const fragment = document.createDocumentFragment();
+
   // 创建每个轨道
   recordingsPerTrack.forEach((recordings, trackIndex) => {
     const isLastTrack = trackIndex === recordingsPerTrack.length - 1;
@@ -307,8 +310,11 @@ export function createTracks(config) {
     };
 
     const { trackRow } = createTrack(trackConfig);
-    tracksContainer.appendChild(trackRow);
+    fragment.appendChild(trackRow);
   });
+
+  // 一次性添加所有轨道
+  tracksContainer.appendChild(fragment);
 
   return tracksContainer;
 }
