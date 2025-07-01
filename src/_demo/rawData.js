@@ -598,13 +598,13 @@ export const demoData = [
   },
   {
     id: "3377182",
-    name: "16.180大华nvr_2",
+    name: "16.180大华nvr_243214",
     result: 2,
     extInfo: {
       id: "3377182",
       channelCode: "00000000001311337718",
       deviceCode: "00000000001181337710",
-      name: "16.180大华nvr_2",
+      name: "16.180大华nvr_243214",
     },
     "2025-03-18": [
       {

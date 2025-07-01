@@ -46,17 +46,17 @@ export function createTrack(config) {
   const infoContainer = createElement("div", `${flag}-ihm-timeSlider-trackContainer-trackRow-info`, __styles_leftInfoContainer(flag, styles, theme));
 
   infoContainer.innerHTML = `
-    <div class="" style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
-      <div style="flex: 1; display: flex; justify-content: center;">
+    <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
+      <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;">
         <span style="font-size: 14px; color: ${
           _styles[theme].leftTextColor
-        }; max-width: calc(100% - 30px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${extInfo.name}</span>
+        }; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;">
+          ${extInfo.name}
+        </span>
       </div>
-      <span class="${flag}-ihm-timeSlider-download-btn" style="width: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer">${downloadSVG(
-    flag,
-    styles,
-    theme
-  )}</span>
+      <span class="${flag}-ihm-timeSlider-download-btn" style="width: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        ${downloadSVG(flag, styles, theme)}
+      </span>
     </div>
   `;
 

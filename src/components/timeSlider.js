@@ -75,6 +75,7 @@ export default class ihm_TimeSlider {
       position: "relative",
       paddingLeft: `${this.padding.left}px`,
       paddingRight: `${this.padding.right}px`,
+      userSelect: "none",
     });
 
     // 创建顶部栏
