@@ -23,7 +23,7 @@ const config = {
   flag: "__4f8fbfb",
   theme: "light-theme",
   styles: {
-    emptyHeight: "100px",
+    emptySize: "80px",
     scrollHeight: "100px",
   },
   dbClick: (data) => {

@@ -162,6 +162,8 @@ export const emptySVG = (flag, styles = {}, theme) => {
   if (theme === "light-theme") {
     return `
       <svg
+        width="${customStyle(styles.emptySize, "80px")}"
+        height="${customStyle(styles.emptySize, "80px")}"
         viewBox="0 0 136 132"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
@@ -247,6 +249,8 @@ export const emptySVG = (flag, styles = {}, theme) => {
   } else {
     return `
       <svg
+        width="${customStyle(styles.emptySize, "80px")}"
+        height="${customStyle(styles.emptySize, "80px")}"
         viewBox="0 0 136 132"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
