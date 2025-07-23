@@ -1,5 +1,5 @@
 // 版本
-export const _version = "1.0.6 - beta - 202507011555";
+export const _version = "1.0.6 - beta - 202507231725";
 
 // 样式
 export const _styles = {
@@ -44,7 +44,7 @@ export const _styles = {
     // hover时间块，刻度轴上显示的时间文本颜色timeMarker
     headerTimeMarkerColor: "#f0f3ff",
     // track的背景颜色
-    trackBackgroundColor: "#494c5b",
+    trackBackgroundColor: "#363642",
     // 时间轴的markerLine的颜色
     markerLineColor: "#0DC479",
     // 时间轴的markerLine的hover颜色
