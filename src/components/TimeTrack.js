@@ -50,7 +50,7 @@ export function createTrack(config) {
       <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;">
         <span style="font-size: 14px; color: ${
           _styles[theme].leftTextColor
-        }; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;">
+        }; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;" title="${extInfo.name}">
           ${extInfo.name}
         </span>
       </div>

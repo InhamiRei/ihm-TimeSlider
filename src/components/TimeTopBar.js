@@ -47,9 +47,9 @@ export function createTopBar(config) {
   timeAndButtonContainer.innerHTML = `
     ${plusSVG(flag, styles, theme)}
     ${prevDaySVG(flag, styles, theme)}
-    <span class="${flag}-ihm-timeSlider-date" style="font-size: 14px; color: ${_styles[theme].leftTextColor}; cursor: pointer;">${
-    date.toISOString().split("T")[0]
-  }</span>
+    <span class="${flag}-ihm-timeSlider-date" style="font-size: 14px; color: ${
+    _styles[theme].leftTextColor
+  }; cursor: initial;pointer-events: none;">${date.toISOString().split("T")[0]}</span>
     ${nextDaySVG(flag, styles, theme)}
     ${minusSVG(flag, styles, theme)}
   `;

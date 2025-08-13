@@ -19,12 +19,14 @@ const data = transformData(rawData);
 // 配置项
 const config = {
   container: document.getElementById("timeSlider"),
-  curDay: "2025-03-19",
+  curDay: "2025-08-01",
   flag: "__4f8fbfb",
   theme: "light-theme",
   styles: {
     emptySize: "80px",
     scrollHeight: "100px",
+    iconWidth: "1.1429rem",
+    iconHeight: "1.1429rem",
   },
   dbClick: (data) => {
     console.log("data", data);

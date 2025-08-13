@@ -1,5 +1,5 @@
 // 版本
-export const _version = "1.0.6 - beta - 202507231725";
+export const _version = "1.0.6 - beta - 202508122000";
 
 // 样式
 export const _styles = {
@@ -7,6 +7,10 @@ export const _styles = {
   "light-theme": {
     // 图标颜色
     iconColor: "#6f6f6f",
+    // 图标填充色
+    iconFillRectColor: "#f5f6f9",
+    // 图标边框颜色
+    iconBorderColor: "#cbcdd3",
     // border的颜色
     borderColor: "#f2f3f6",
     // 左侧列的文本颜色
@@ -30,7 +34,11 @@ export const _styles = {
   // 暗色主题
   "dark-theme": {
     // 图标颜色
-    iconColor: "#c7c7c7",
+    iconColor: "#727680",
+    // 图标填充色
+    iconFillRectColor: "#4a4c5b",
+    // 图标边框颜色
+    iconBorderColor: "#424453",
     // border的颜色
     borderColor: "#272934",
     // 左侧列的文本颜色

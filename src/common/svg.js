@@ -4,62 +4,73 @@ import { customStyle } from "../utils/common.js";
 // 放大刻度轴的图标
 export const plusSVG = (flag, styles = {}, theme) => `
   <svg
-    class="ihm-timeSlider-plus-svg"
-    t="1733727315169"
-    class="icon"
+    t="1754992317676"
     viewBox="0 0 1024 1024"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
-    p-id="1106"
+    p-id="3465"
+    class="ihm-timeSlider-plus-svg"
     data-icon="${flag}-plus"
-    width="${customStyle(styles.iconWidth, "18px")}"
-    height="${customStyle(styles.iconWidth, "18px")}"
-    color="${customStyle(_styles[theme].iconColor, "#ffffff")}"
+    style="cursor: pointer;"
+    width="${customStyle(styles.iconWidth, "16px")}"
+    height="${customStyle(styles.iconWidth, "16px")}"
   >
     <title>放大刻度轴</title>
+    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}" rx="100" ry="100" />
     <path
-      d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z"
-      p-id="1107"
-      fill="currentColor"
+      d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
+      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      p-id="3466"
     ></path>
     <path
-      d="M710.3 478H540V307.7c0-17.1-13.9-31-31-31s-31 13.9-31 31V478H307.7c-17.1 0-31 13.9-31 31s13.9 31 31 31H478v170.3c0 17.1 13.9 31 31 31s31-13.9 31-31V540h170.3c17.1 0 31-13.9 31-31s-13.9-31-31-31z"
-      p-id="1108"
-      fill="currentColor"
+      d="M319.8976 480.256h383.7952c17.6128 0 31.9488 14.336 31.9488 31.9488s-14.336 31.9488-31.9488 31.9488H319.8976c-17.6128 0-31.9488-14.336-31.9488-31.9488 0.2048-17.6128 14.336-31.9488 31.9488-31.9488z"
+      fill="#B9BDC9"
+      p-id="3467"
+    ></path>
+    <path
+      d="M477.7984 695.9104V312.1152c0-17.6128 14.336-31.9488 31.9488-31.9488s31.9488 14.336 31.9488 31.9488v383.7952c0 17.6128-14.336 31.9488-31.9488 31.9488-17.6128-0.2048-31.9488-14.336-31.9488-31.9488z"
+      fill="#B9BDC9"
+      p-id="3468"
     ></path>
   </svg>
+
 `;
 
 // 前一天的图标
 export const prevDaySVG = (flag, styles = {}, theme) => `
   <svg
-    class="ihm-timeSlider-prev-svg"
-    t="1733725745183"
-    class="icon"
+    t="1754990474755"
     viewBox="0 0 1024 1024"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
-    p-id="1644"
+    p-id="15074"
+    class="ihm-timeSlider-prev-svg"
     data-icon="${flag}-prevDay"
-    width="${customStyle(styles.iconWidth, "18px")}"
-    height="${customStyle(styles.iconWidth, "18px")}"
-    color="${customStyle(_styles[theme].iconColor, "#ffffff")}"
+    style="cursor: pointer;"
+    width="${customStyle(styles.iconWidth, "16px")}"
+    height="${customStyle(styles.iconWidth, "16px")}"
   >
     <title>前一天</title>
+    <rect
+      x="39.384615"
+      y="39.384615"
+      width="945.23077"
+      height="945.23077"
+      rx="20"
+      ry="20"
+      fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}"
+      p-id="15075"
+    ></rect>
     <path
-      d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z"
-      p-id="1646"
-      fill="currentColor"
+      d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
+      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      p-id="3466"
     ></path>
     <path
-      d="M510.448485 366.467879a31.030303 31.030303 0 0 1 0 43.876848l-109.723152 109.723152 109.723152 109.692121a31.030303 31.030303 0 1 1-43.876849 43.907879l-131.661575-131.661576a31.030303 31.030303 0 0 1 0-43.876848l131.661575-131.661576a31.030303 31.030303 0 0 1 43.876849 0z"
-      fill="currentColor"
-      p-id="1646"
-    ></path>
-    <path
-      d="M325.818182 520.067879a31.030303 31.030303 0 0 1 31.030303-31.030303h310.30303a31.030303 31.030303 0 1 1 0 62.060606H356.848485a31.030303 31.030303 0 0 1-31.030303-31.030303z"
-      fill="currentColor"
-      p-id="1647"
+      d="M249.068308 495.300923a43.598769 43.598769 0 0 0 0 61.636923l217.993846 217.993846a43.598769 43.598769 0 1 0 61.636923-61.636923l-143.556923-143.556923h330.830769a43.598769 43.598769 0 1 0 0-87.197538h-330.830769l143.556923-143.556923a43.480615 43.480615 0 0 0 0-61.636923 43.598769 43.598769 0 0 0-61.636923 0l-217.993846 217.954461z"
+      fill="#B9BDC9"
+      p-id="15076"
+      transform="scale(0.8) translate(150, 120)"
     ></path>
   </svg>
 `;
@@ -67,63 +78,69 @@ export const prevDaySVG = (flag, styles = {}, theme) => `
 // 后一天的图标
 export const nextDaySVG = (flag, styles = {}, theme) => `
   <svg
-    class="ihm-timeSlider-next-svg"
-    t="1733725745183"
-    class="icon"
+    t="1754990474755"
     viewBox="0 0 1024 1024"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
-    p-id="1644"
-    style="transform:rotate(180deg);"
+    p-id="15074"
+    class="ihm-timeSlider-next-svg"
     data-icon="${flag}-nextDay"
-    width="${customStyle(styles.iconWidth, "18px")}"
-    height="${customStyle(styles.iconWidth, "18px")}"
-    color="${customStyle(_styles[theme].iconColor, "#ffffff")}"
+    style="cursor: pointer;"
+    width="${customStyle(styles.iconWidth, "16px")}"
+    height="${customStyle(styles.iconWidth, "16px")}"
   >
     <title>后一天</title>
-    <path
-      d="M823.8 91H194.2C137.3 91 91 137.3 91 194.2v629.6C91 880.7 137.3 927 194.2 927h629.6c56.9 0 103.2-46.3 103.2-103.2V194.2C927 137.3 880.7 91 823.8 91z m41.3 732.8c0 22.8-18.5 41.3-41.3 41.3H194.2c-22.8 0-41.3-18.5-41.3-41.3V194.2c0-22.8 18.5-41.3 41.3-41.3h629.6c22.8 0 41.3 18.5 41.3 41.3v629.6z"
-      p-id="1646"
-      fill="currentColor"
-    ></path>
-    <path
-      d="M510.448485 366.467879a31.030303 31.030303 0 0 1 0 43.876848l-109.723152 109.723152 109.723152 109.692121a31.030303 31.030303 0 1 1-43.876849 43.907879l-131.661575-131.661576a31.030303 31.030303 0 0 1 0-43.876848l131.661575-131.661576a31.030303 31.030303 0 0 1 43.876849 0z"
-      fill="currentColor"
-      p-id="1646"
-    ></path>
-    <path
-      d="M325.818182 520.067879a31.030303 31.030303 0 0 1 31.030303-31.030303h310.30303a31.030303 31.030303 0 1 1 0 62.060606H356.848485a31.030303 31.030303 0 0 1-31.030303-31.030303z"
-      fill="currentColor"
-      p-id="1647"
-    ></path>
+    <rect
+      x="39.384615"
+      y="39.384615"
+      width="945.23077"
+      height="945.23077"
+      rx="20"
+      ry="20"
+      fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}"
+      p-id="15075"
+    ></rect>
+    <g transform="rotate(180 512 512)">
+      <path
+        d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
+        fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+        p-id="3466"
+      ></path>
+      <path
+        d="M249.068308 495.300923a43.598769 43.598769 0 0 0 0 61.636923l217.993846 217.993846a43.598769 43.598769 0 1 0 61.636923-61.636923l-143.556923-143.556923h330.830769a43.598769 43.598769 0 1 0 0-87.197538h-330.830769l143.556923-143.556923a43.480615 43.480615 0 0 0 0-61.636923 43.598769 43.598769 0 0 0-61.636923 0l-217.993846 217.954461z"
+        fill="#B9BDC9"
+        transform="scale(0.8) translate(150, 120)"
+        p-id="15076"
+      ></path>
+    </g>
   </svg>
 `;
 
 // 缩小刻度轴
 export const minusSVG = (flag, styles = {}, theme) => `
   <svg
-    class="ihm-timeSlider-minus-svg"
-    t="1733727410968"
-    class="icon"
+    t="1754992317676"
     viewBox="0 0 1024 1024"
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
-    p-id="1341"
+    p-id="3465"
+    class="ihm-timeSlider-minus-svg"
     data-icon="${flag}-minus"
-    width="${customStyle(styles.iconWidth, "18px")}"
-    height="${customStyle(styles.iconWidth, "18px")}"
-    color="${customStyle(_styles[theme].iconColor, "#ffffff")}"
+    style="cursor: pointer;"
+    width="${customStyle(styles.iconWidth, "16px")}"
+    height="${customStyle(styles.iconWidth, "16px")}"
   >
     <title>缩小刻度轴</title>
+    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}" rx="100" ry="100" />
     <path
-      d="M818.4 98.2H199.6c-55.9 0-101.4 45.5-101.4 101.4v618.8c0 55.9 45.5 101.4 101.4 101.4h618.8c55.9 0 101.4-45.5 101.4-101.4V199.6c0-55.9-45.5-101.4-101.4-101.4zM859 818.4c0 22.4-18.2 40.6-40.6 40.6H199.6c-22.4 0-40.6-18.2-40.6-40.6V199.6c0-22.4 18.2-40.6 40.6-40.6h618.8c22.4 0 40.6 18.2 40.6 40.6v618.8z"
-      p-id="1342"
-      fill="currentColor"
+      d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
+      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      p-id="3466"
     ></path>
     <path
-      d="M706.8 478.6H311.2c-16.8 0-30.4 13.6-30.4 30.4 0 16.8 13.6 30.4 30.4 30.4h395.6c16.8 0 30.4-13.6 30.4-30.4 0-16.8-13.6-30.4-30.4-30.4z"
-      p-id="1343"
-      fill="currentColor"
+      d="M319.8976 480.256h383.7952c17.6128 0 31.9488 14.336 31.9488 31.9488s-14.336 31.9488-31.9488 31.9488H319.8976c-17.6128 0-31.9488-14.336-31.9488-31.9488 0.2048-17.6128 14.336-31.9488 31.9488-31.9488z"
+      fill="#B9BDC9"
+      p-id="3467"
     ></path>
   </svg>
 `;
