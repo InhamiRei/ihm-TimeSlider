@@ -29,6 +29,7 @@ export function createTrack(config) {
     timeIndicatorText,
     timelineContainer,
     markerLineInfo,
+    showDownloadBtn = true,
   } = config;
 
   // 创建轨道行
@@ -54,9 +55,15 @@ export function createTrack(config) {
           ${extInfo.name}
         </span>
       </div>
+      ${
+        showDownloadBtn
+          ? `
       <span class="${flag}-ihm-timeSlider-download-btn" style="width: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
         ${downloadSVG(flag, styles, theme)}
       </span>
+      `
+          : ""
+      }
     </div>
   `;
 
@@ -307,6 +314,7 @@ export function createTracks(config) {
       timeIndicatorText,
       timelineContainer,
       markerLineInfo,
+      showDownloadBtn: config.showDownloadBtn,
     };
 
     const { trackRow } = createTrack(trackConfig);

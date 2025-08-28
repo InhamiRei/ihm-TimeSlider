@@ -22,6 +22,7 @@ const config = {
   curDay: "2025-08-01",
   flag: "__4f8fbfb",
   theme: "light-theme",
+  showDownloadBtn: false,
   styles: {
     emptySize: "80px",
     scrollHeight: "100px",
