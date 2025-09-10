@@ -29,6 +29,7 @@ export default class ihm_TimeSlider {
     this.date = new Date(config.curDay || new Date().toISOString().split("T")[0]); // 当前显示的日期
     this.data = config.data; // 录像数据
     this.showDownloadBtn = config.showDownloadBtn !== undefined ? config.showDownloadBtn : true; // 是否显示下载按钮
+    this.showMarkerLine = config.showMarkerLine !== undefined ? config.showMarkerLine : true; // 是否显示标记线，默认为true
 
     this.padding = { top: 0, bottom: 0, left: 0, right: 0 };
 
@@ -119,6 +120,7 @@ export default class ihm_TimeSlider {
       onDownloadClick: this.onDownloadClick,
       onSegmentDblClick: this.onSegmentDblClick,
       showDownloadBtn: this.showDownloadBtn,
+      showMarkerLine: this.showMarkerLine,
     };
 
     this.tracksContainer = createTracks(tracksConfig);

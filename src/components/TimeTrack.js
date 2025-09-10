@@ -30,6 +30,7 @@ export function createTrack(config) {
     timelineContainer,
     markerLineInfo,
     showDownloadBtn = true,
+    showMarkerLine = true,
   } = config;
 
   // 创建轨道行
@@ -103,6 +104,11 @@ export function createTrack(config) {
   sliderContainer.appendChild(markerLine);
   trackRow.markerLine = markerLine;
 
+  // 如果不显示标记线，则隐藏它
+  if (!showMarkerLine) {
+    markerLine.style.display = "none";
+  }
+
   // 创建时间指示线
   const timeIndicatorLine = createTimeMarker(flag, styles, theme, true);
   sliderContainer.appendChild(timeIndicatorLine);
@@ -147,20 +153,23 @@ export function createTrack(config) {
         let time = calculateTimeFromPosition(block_left, scaleWidth, scaleSeconds);
         const timeObj = generateTimeObj(config.date, time);
 
-        // 获取当前轨道的刻度线，并移动到点击位置
-        markerLine.style.left = `${block_left}px`;
+        // 只有在showMarkerLine为true时才显示和移动标记线
+        if (showMarkerLine) {
+          // 获取当前轨道的刻度线，并移动到点击位置
+          markerLine.style.left = `${block_left}px`;
 
-        // 计算临界宽度
-        const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
-        const critical = blueBlock_width + blueBlock_left - container_left;
-        const criticalTime = block.end;
+          // 计算临界宽度
+          const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
+          const critical = blueBlock_width + blueBlock_left - container_left;
+          const criticalTime = block.end;
 
-        // 启动刻度线的移动
-        startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+          // 启动刻度线的移动
+          startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+        }
 
         // 触发双击事件回调
         if (onSegmentDblClick) {
-          onSegmentDblClick({ ...timeObj, info: block.extInfo, event });
+          onSegmentDblClick({ ...timeObj, info: block.extInfo, block, event });
         }
       });
     }
@@ -190,19 +199,22 @@ export function createTrack(config) {
           const time = nextBlueBlock.start;
           const timeObj = generateTimeObj(config.date, time);
 
-          // 获取当前轨道的刻度线，并移动到下一个蓝色模块左侧
-          markerLine.style.left = `${nextBlueBlock_left}px`;
+          // 只有在showMarkerLine为true时才显示和移动标记线
+          if (showMarkerLine) {
+            // 获取当前轨道的刻度线，并移动到下一个蓝色模块左侧
+            markerLine.style.left = `${nextBlueBlock_left}px`;
 
-          // 计算临界宽度
-          const critical = calculatePositionFromTime(nextBlueBlock.end, scaleWidth, scaleSeconds);
-          const criticalTime = nextBlueBlock.end;
+            // 计算临界宽度
+            const critical = calculatePositionFromTime(nextBlueBlock.end, scaleWidth, scaleSeconds);
+            const criticalTime = nextBlueBlock.end;
 
-          // 启动刻度线的移动
-          startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+            // 启动刻度线的移动
+            startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+          }
 
           // 触发双击事件回调
           if (onSegmentDblClick) {
-            onSegmentDblClick({ ...timeObj, info: nextBlueBlock.extInfo, event });
+            onSegmentDblClick({ ...timeObj, info: nextBlueBlock.extInfo, block: nextBlueBlock, event });
           }
         } else {
           console.log("无蓝色模块");
@@ -247,6 +259,7 @@ export function createTracks(config) {
     markerLineInfo,
     onDownloadClick,
     onSegmentDblClick,
+    showMarkerLine,
   } = config;
 
   // 创建轨道容器
@@ -315,6 +328,7 @@ export function createTracks(config) {
       timelineContainer,
       markerLineInfo,
       showDownloadBtn: config.showDownloadBtn,
+      showMarkerLine,
     };
 
     const { trackRow } = createTrack(trackConfig);

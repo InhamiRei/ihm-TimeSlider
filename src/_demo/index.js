@@ -1,28 +1,76 @@
 import { rawData, demoData } from "./rawData.js";
 import ihm_TimeSlider from "../components/TimeSlider.js";
 
-// 处理rawData数据的方法
+// 处理rawData数据的方法，支持跨天处理
 const transformData = (data) => {
   return data.reduce((acc, item) => {
-    const date = item.startTime.split(" ")[0]; // 获取日期部分
-    if (!acc[date]) {
-      acc[date] = [];
+    const startDate = item.startTime.split(" ")[0]; // 获取开始日期
+    const endDate = item.endTime.split(" ")[0]; // 获取结束日期
+
+    // 如果开始日期和结束日期相同，不需要分割
+    if (startDate === endDate) {
+      if (!acc[startDate]) {
+        acc[startDate] = [];
+      }
+      acc[startDate].push({
+        startTime: item.startTime,
+        endTime: item.endTime,
+      });
+    } else {
+      // 跨天情况，需要分割
+      // 处理第一天（从开始时间到当天结束23:59:59）
+      if (!acc[startDate]) {
+        acc[startDate] = [];
+      }
+      acc[startDate].push({
+        startTime: item.startTime,
+        endTime: `${startDate} 23:59:59`,
+      });
+
+      // 处理第二天（从00:00:00到结束时间）
+      if (!acc[endDate]) {
+        acc[endDate] = [];
+      }
+      acc[endDate].push({
+        startTime: `${endDate} 00:00:00`,
+        endTime: item.endTime,
+      });
     }
-    acc[date].push({
-      startTime: item.startTime,
-      endTime: item.endTime,
-    });
+
     return acc;
   }, {});
 };
-const data = transformData(rawData);
+
+const data = [
+  {
+    id: "1602",
+    name: "宇视NVR225通道01",
+    result: 2,
+    extInfo: {
+      id: "1602",
+      channelCode: "00000000001181000144",
+      deviceCode: "00000000001181000150",
+      name: "宇视NVR225通道01",
+      storageType: 0,
+      cameraType: 1,
+      recordType: 2,
+      startTime: "2025-07-31 10:36:44",
+      endTime: "2025-08-01 10:36:44",
+    },
+    ...transformData(rawData),
+  },
+];
+
+console.log("data", data);
+
 // 配置项
 const config = {
   container: document.getElementById("timeSlider"),
-  curDay: "2025-08-01",
+  // curDay: "2025-08-01",
   flag: "__4f8fbfb",
   theme: "light-theme",
   showDownloadBtn: false,
+  showMarkerLine: false,
   styles: {
     emptySize: "80px",
     scrollHeight: "100px",
@@ -41,7 +89,8 @@ const config = {
     // 在这里处理下载逻辑
   },
   // data: [],
-  data: demoData,
+  data: data,
+  // data: demoData,
 };
 
 // 初始化时间轴组件
