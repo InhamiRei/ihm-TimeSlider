@@ -93,12 +93,41 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleSeconds) =
  * calculatePositionFromTime("02:30:30", 50, 3600); // 返回 150
  */
 export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
-  // 将时间字符串 (hh:mm:ss) 转换为总秒数
-  const [hours, minutes, seconds] = time.split(":").map(Number);
-  const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+  // 输入验证
+  if (!time || typeof time !== "string") {
+    console.warn("calculatePositionFromTime: Invalid time parameter:", time);
+    return 0;
+  }
 
-  // 计算滑块位置 (blockLeft)
-  const blockLeft = (totalSeconds * scaleWidth) / scaleSeconds;
+  if (!scaleWidth || !scaleSeconds || scaleWidth <= 0 || scaleSeconds <= 0) {
+    console.warn("calculatePositionFromTime: Invalid scaleWidth or scaleSeconds:", scaleWidth, scaleSeconds);
+    return 0;
+  }
 
-  return blockLeft;
+  try {
+    // 将时间字符串 (hh:mm:ss) 转换为总秒数
+    const [hours, minutes, seconds] = time.split(":").map(Number);
+
+    // 验证解析结果
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+      console.warn("calculatePositionFromTime: Invalid time format:", time);
+      return 0;
+    }
+
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+    // 检查时间是否在合理范围内 (0-86400秒，即一天)
+    if (totalSeconds < 0 || totalSeconds > 86400) {
+      console.warn("calculatePositionFromTime: Time out of range (0-24h):", time, totalSeconds);
+      return Math.max(0, Math.min((totalSeconds * scaleWidth) / scaleSeconds, 24 * scaleWidth));
+    }
+
+    // 计算滑块位置 (blockLeft)
+    const blockLeft = (totalSeconds * scaleWidth) / scaleSeconds;
+
+    return Math.max(0, blockLeft); // 确保不返回负值
+  } catch (error) {
+    console.error("calculatePositionFromTime error:", error, "time:", time);
+    return 0;
+  }
 };

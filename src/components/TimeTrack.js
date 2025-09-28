@@ -116,15 +116,38 @@ export function createTrack(config) {
   // 重置刻度线位置并启动移动
   if (markerLineInfo && markerLineInfo.length > 0 && markerLineInfo[trackIndex]) {
     const info = markerLineInfo[trackIndex];
-    if (info) {
-      const { time: infoTime, criticalTime: infoCriticalTime } = info;
+    if (info && info.time && info.criticalTime) {
+      const { time: infoTime, criticalTime: infoCriticalTime, isPaused } = info;
+
+      // 计算新的像素位置
       const newLeft = calculatePositionFromTime(infoTime, scaleWidth, scaleSeconds);
       const newCritical = calculatePositionFromTime(infoCriticalTime, scaleWidth, scaleSeconds);
 
-      markerLine.style.left = `${newLeft}px`;
+      // 检查位置是否在合理范围内（避免负数或超出范围）
+      if (newLeft >= 0 && newCritical >= newLeft) {
+        markerLine.style.left = `${newLeft}px`;
 
-      // 启动刻度线的移动
-      startMarkerMovement(markerLine, newCritical, infoCriticalTime, scaleWidth, scaleSeconds);
+        // 恢复暂停状态
+        if (isPaused !== undefined) {
+          markerLine.isPaused = isPaused;
+        }
+
+        // 重新设置markerLine的info信息
+        markerLine.info = {
+          time: infoTime,
+          criticalTime: infoCriticalTime,
+        };
+
+        // 只在未暂停时启动刻度线的移动
+        if (!markerLine.isPaused) {
+          startMarkerMovement(markerLine, newCritical, infoCriticalTime, scaleWidth, scaleSeconds);
+        }
+      } else {
+        // 如果位置不合理，隐藏markerLine或重置到起始位置
+        console.warn("MarkerLine position out of range, resetting to 0");
+        markerLine.style.left = "0px";
+        markerLine.info = null;
+      }
     }
   }
 

@@ -167,13 +167,21 @@ export default class ihm_TimeSlider {
       .sort((a, b) => a - b); // 获取所有刻度并排序
     const currentIndex = scales.indexOf(this.scaleTime); // 找到当前刻度的索引
 
-    // 保存标记线信息
+    // 保存标记线信息 - 重要：保存时间信息而不是像素位置
     this.markerLineInfo = [];
     if (this.tracksContainer) {
       for (let i = 0; i < this.tracksContainer.children.length; i++) {
         const track = this.tracksContainer.children[i];
-        if (track.markerLine) {
-          this.markerLineInfo.push(track.markerLine.info);
+        if (track.markerLine && track.markerLine.info) {
+          // 保存完整的markerLine信息，包括时间和isPaused状态
+          this.markerLineInfo.push({
+            time: track.markerLine.info.time,
+            criticalTime: track.markerLine.info.criticalTime,
+            isPaused: track.markerLine.isPaused || false,
+          });
+        } else {
+          // 如果没有markerLine信息，推入null以保持索引对应
+          this.markerLineInfo.push(null);
         }
       }
     }

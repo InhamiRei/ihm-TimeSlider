@@ -66,11 +66,11 @@ console.log("data", data);
 // 配置项
 const config = {
   container: document.getElementById("timeSlider"),
-  // curDay: "2025-08-01",
+  curDay: "2025-08-01",
   flag: "__4f8fbfb",
   theme: "light-theme",
   showDownloadBtn: false,
-  showMarkerLine: false,
+  // showMarkerLine: false,
   styles: {
     emptySize: "80px",
     scrollHeight: "100px",
@@ -89,8 +89,8 @@ const config = {
     // 在这里处理下载逻辑
   },
   // data: [],
-  data: data,
-  // data: demoData,
+  // data: data,
+  data: demoData,
 };
 
 // 初始化时间轴组件
