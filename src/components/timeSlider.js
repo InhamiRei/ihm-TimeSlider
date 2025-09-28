@@ -62,6 +62,7 @@ export default class ihm_TimeSlider {
 
     this.markerLineInfo = []; // 存储刻度线的数据，轨道信息数组，用来还原刻度线的位置
     this.markerLineInstance = {}; // 存储刻度线的实例，不会经常变化
+    this.markerLineStates = {}; // 存储不同日期下的markerLine状态
 
     this.render();
     this._addResizeListener();
@@ -69,6 +70,12 @@ export default class ihm_TimeSlider {
 
   // 主渲染方法
   render() {
+    // 在渲染前，检查当前日期是否有保存的markerLine状态需要恢复
+    const currentDateStr = this.date.toISOString().split("T")[0];
+    if (!this.markerLineInfo || this.markerLineInfo.length === 0) {
+      this.markerLineInfo = this._getMarkerLineStateForDate(currentDateStr) || [];
+    }
+
     // 清空容器
     this.container.innerHTML = "";
 
@@ -140,20 +147,76 @@ export default class ihm_TimeSlider {
     const dateStr = this.date.toISOString().split("T")[0];
     const newDateStr = prompt("请输入日期 (YYYY-MM-DD)", dateStr);
     if (newDateStr && /^\d{4}-\d{2}-\d{2}$/.test(newDateStr)) {
+      // 保存当前日期的markerLine状态
+      this._saveCurrentMarkerLineState();
+
       this.date = new Date(newDateStr);
+
+      // 获取新日期的markerLine状态
+      this.markerLineInfo = this._getMarkerLineStateForDate(newDateStr) || [];
+
       this.render();
     }
   }
 
+  /**
+   * 保存当前日期的markerLine状态
+   */
+  _saveCurrentMarkerLineState() {
+    const currentDateStr = this.date.toISOString().split("T")[0];
+
+    // 保存当前日期的markerLine状态
+    this.markerLineStates[currentDateStr] = [];
+    if (this.tracksContainer) {
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track.markerLine && track.markerLine.info) {
+          this.markerLineStates[currentDateStr].push({
+            time: track.markerLine.info.time,
+            criticalTime: track.markerLine.info.criticalTime,
+            isPaused: track.markerLine.isPaused || false,
+          });
+        } else {
+          this.markerLineStates[currentDateStr].push(null);
+        }
+      }
+    }
+  }
+
+  /**
+   * 获取指定日期的markerLine状态
+   * @param {string} dateStr - 日期字符串 (YYYY-MM-DD)
+   * @returns {Array|null} markerLine状态数组或null
+   */
+  _getMarkerLineStateForDate(dateStr) {
+    return this.markerLineStates[dateStr] || null;
+  }
+
   // 切换到前一天
   prevDay() {
+    // 保存当前日期的markerLine状态
+    this._saveCurrentMarkerLineState();
+
     this.date = adjustDate(this.date, "prev");
+
+    // 获取新日期的markerLine状态
+    const newDateStr = this.date.toISOString().split("T")[0];
+    this.markerLineInfo = this._getMarkerLineStateForDate(newDateStr) || [];
+
     this.render();
   }
 
   // 切换到后一天
   nextDay() {
+    // 保存当前日期的markerLine状态
+    this._saveCurrentMarkerLineState();
+
     this.date = adjustDate(this.date, "next");
+
+    // 获取新日期的markerLine状态
+    const newDateStr = this.date.toISOString().split("T")[0];
+    this.markerLineInfo = this._getMarkerLineStateForDate(newDateStr) || [];
+
     this.render();
   }
 
@@ -207,6 +270,10 @@ export default class ihm_TimeSlider {
   // 修改模式: 亮色模式 / 暗色模式
   setTheme(theme) {
     if (theme !== "light-theme" && theme !== "dark-theme") return;
+
+    // 保存当前markerLine状态
+    this._saveCurrentMarkerLineState();
+
     this.theme = theme;
     this.render();
   }
@@ -315,5 +382,6 @@ export default class ihm_TimeSlider {
     this.timeIndicatorText = null;
     this.markerLineInfo = [];
     this.markerLineInstance = {};
+    this.markerLineStates = {};
   }
 }
