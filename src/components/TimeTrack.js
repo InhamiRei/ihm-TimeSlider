@@ -5,7 +5,7 @@ import { downloadSVG } from "../common/svg.js";
 import { createTimeMarker } from "./TimeMarker.js";
 import { bindHoverEvents } from "../utils/eventBind.js";
 import { startMarkerMovement } from "../utils/markLine.js";
-import { calculateTimeFromPosition, calculatePositionFromTime } from "../utils/auxiliary.js";
+import { calculateTimeFromPosition, parseTimeToSeconds } from "../utils/auxiliary.js";
 import { createTimeBlocks } from "../utils/common.js";
 
 /**
@@ -31,6 +31,7 @@ export function createTrack(config) {
     markerLineInfo,
     showDownloadBtn = true,
     showMarkerLine = true,
+    playbackSpeed = 1,
   } = config;
 
   // 创建轨道行
@@ -119,9 +120,9 @@ export function createTrack(config) {
     if (info && info.time && info.criticalTime) {
       const { time: infoTime, criticalTime: infoCriticalTime, isPaused } = info;
 
-      // 计算新的像素位置
-      const newLeft = calculatePositionFromTime(infoTime, scaleWidth, scaleSeconds);
-      const newCritical = calculatePositionFromTime(infoCriticalTime, scaleWidth, scaleSeconds);
+      // 计算新的像素位置（infoTime和infoCriticalTime现在是秒数）
+      const newLeft = (infoTime * scaleWidth) / scaleSeconds;
+      const newCritical = (infoCriticalTime * scaleWidth) / scaleSeconds;
 
       // 检查位置是否在合理范围内（避免负数或超出范围）
       if (newLeft >= 0 && newCritical >= newLeft) {
@@ -140,7 +141,7 @@ export function createTrack(config) {
 
         // 只在未暂停时启动刻度线的移动
         if (!markerLine.isPaused) {
-          startMarkerMovement(markerLine, newCritical, infoCriticalTime, scaleWidth, scaleSeconds);
+          startMarkerMovement(markerLine, newCritical, infoCriticalTime, scaleWidth, scaleSeconds, playbackSpeed);
         }
       } else {
         // 如果位置不合理，隐藏markerLine或重置到起始位置
@@ -184,10 +185,10 @@ export function createTrack(config) {
           // 计算临界宽度
           const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
           const critical = blueBlock_width + blueBlock_left - container_left;
-          const criticalTime = block.end;
+          const criticalTime = parseTimeToSeconds(block.end); // 转换为秒数格式
 
           // 启动刻度线的移动
-          startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+          startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
         }
 
         // 触发双击事件回调
@@ -215,8 +216,9 @@ export function createTrack(config) {
           // 获取容器左侧距离
           const container_left = sliderContainer.getBoundingClientRect().left;
 
-          // 计算下一个蓝色模块的左边位置
-          const nextBlueBlock_left = calculatePositionFromTime(nextBlueBlock.start, scaleWidth, scaleSeconds);
+          // 计算下一个蓝色模块的左边位置（直接从时间字符串计算）
+          const startSeconds = parseTimeToSeconds(nextBlueBlock.start);
+          const nextBlueBlock_left = (startSeconds * scaleWidth) / scaleSeconds;
 
           // 获取对应时间
           const time = nextBlueBlock.start;
@@ -227,12 +229,13 @@ export function createTrack(config) {
             // 获取当前轨道的刻度线，并移动到下一个蓝色模块左侧
             markerLine.style.left = `${nextBlueBlock_left}px`;
 
-            // 计算临界宽度
-            const critical = calculatePositionFromTime(nextBlueBlock.end, scaleWidth, scaleSeconds);
-            const criticalTime = nextBlueBlock.end;
+            // 计算临界宽度（直接从时间字符串计算）
+            const endSeconds = parseTimeToSeconds(nextBlueBlock.end);
+            const critical = (endSeconds * scaleWidth) / scaleSeconds;
+            const criticalTime = endSeconds; // 使用秒数格式，保持与seekToTime一致
 
             // 启动刻度线的移动
-            startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds);
+            startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
           }
 
           // 触发双击事件回调
@@ -283,6 +286,7 @@ export function createTracks(config) {
     onDownloadClick,
     onSegmentDblClick,
     showMarkerLine,
+    playbackSpeed = 1,
   } = config;
 
   // 创建轨道容器
@@ -352,6 +356,7 @@ export function createTracks(config) {
       markerLineInfo,
       showDownloadBtn: config.showDownloadBtn,
       showMarkerLine,
+      playbackSpeed,
     };
 
     const { trackRow } = createTrack(trackConfig);

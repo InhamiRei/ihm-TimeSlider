@@ -1,4 +1,4 @@
-import { rawData, demoData } from "./rawData.js";
+import { rawData, rawData2 } from "./rawData.js";
 import ihm_TimeSlider from "../components/TimeSlider.js";
 
 // 处理rawData数据的方法，支持跨天处理
@@ -45,7 +45,6 @@ const data = [
   {
     id: "1602",
     name: "宇视NVR225通道01",
-    result: 2,
     extInfo: {
       id: "1602",
       channelCode: "00000000001181000144",
@@ -59,6 +58,22 @@ const data = [
     },
     ...transformData(rawData),
   },
+  {
+    id: "431",
+    name: "宇视NVR225通道01",
+    extInfo: {
+      id: "431",
+      channelCode: "00000000001181000144",
+      deviceCode: "00000000001181000150",
+      name: "宇视NVR225通道01",
+      storageType: 0,
+      cameraType: 1,
+      recordType: 2,
+      startTime: "2025-07-31 10:36:44",
+      endTime: "2025-08-01 10:36:44",
+    },
+    ...transformData(rawData2),
+  },
 ];
 
 console.log("data", data);
@@ -66,11 +81,11 @@ console.log("data", data);
 // 配置项
 const config = {
   container: document.getElementById("timeSlider"),
-  curDay: "2025-08-01",
+  curDay: "2025-09-09",
   flag: "__4f8fbfb",
   theme: "light-theme",
   showDownloadBtn: false,
-  // showMarkerLine: false,
+  showMarkerLine: true, // 确保显示刻度线
   styles: {
     emptySize: "80px",
     scrollHeight: "100px",
@@ -89,8 +104,7 @@ const config = {
     // 在这里处理下载逻辑
   },
   // data: [],
-  // data: data,
-  data: demoData,
+  data: data,
 };
 
 // 初始化时间轴组件
@@ -128,4 +142,31 @@ window.markLineOperate = (action) => {
 window.getTimeLineInfo = () => {
   const info = timeline.getInfo();
   console.log("info", info);
+};
+
+// 设置播放倍速
+window.setPlaybackSpeed = (speed, trackIndex) => {
+  timeline.setPlaybackSpeed(speed, trackIndex);
+  console.log(`播放倍速已设置为 ${speed}x`);
+};
+
+// 定位刻度线到指定时间
+window.seekToTime = (time, trackIndex) => {
+  timeline.seekToTime(time, trackIndex);
+  console.log(`刻度线已定位到 ${time}`);
+};
+
+// 根据轨道选择器定位到指定时间
+window.seekToTimeWithTrack = (time) => {
+  const trackSelector = document.getElementById("trackSelector");
+  const selectedTrack = trackSelector.value;
+
+  if (selectedTrack === "all") {
+    timeline.seekToTime(time);
+    console.log(`所有轨道的刻度线已定位到 ${time}`);
+  } else {
+    const trackIndex = parseInt(selectedTrack, 10);
+    timeline.seekToTime(time, trackIndex);
+    console.log(`第${trackIndex + 1}条轨道的刻度线已定位到 ${time}`);
+  }
 };

@@ -1,6 +1,6 @@
 import { _styles } from "../common/variable.js";
 import { createElement, isDom, adjustDate } from "../utils/common.js";
-import { calculateTimeFromPosition } from "../utils/auxiliary.js";
+import { calculateTimeFromPosition, calculatePositionFromTime, findNextRecording } from "../utils/auxiliary.js";
 import { emptySVG } from "../common/svg.js";
 import { createTopBar } from "./TimeTopBar.js";
 import { createTracks } from "./TimeTrack.js";
@@ -63,6 +63,7 @@ export default class ihm_TimeSlider {
     this.markerLineInfo = []; // 存储刻度线的数据，轨道信息数组，用来还原刻度线的位置
     this.markerLineInstance = {}; // 存储刻度线的实例，不会经常变化
     this.markerLineStates = {}; // 存储不同日期下的markerLine状态
+    this.playbackSpeed = 1; // 播放倍速，默认为1倍速
 
     this.render();
     this._addResizeListener();
@@ -128,6 +129,7 @@ export default class ihm_TimeSlider {
       onSegmentDblClick: this.onSegmentDblClick,
       showDownloadBtn: this.showDownloadBtn,
       showMarkerLine: this.showMarkerLine,
+      playbackSpeed: this.playbackSpeed,
     };
 
     this.tracksContainer = createTracks(tracksConfig);
@@ -295,6 +297,7 @@ export default class ihm_TimeSlider {
       tracks: [],
       scaleTime: this.scaleTime,
       scaleSeconds: this.scaleSeconds,
+      playbackSpeed: this.playbackSpeed, // 添加播放倍速信息
     };
 
     // 如果轨道容器不存在，直接返回基本信息
@@ -326,6 +329,254 @@ export default class ihm_TimeSlider {
     }
 
     return info;
+  }
+
+  /**
+   * 设置播放倍速
+   * @param {number} speed - 播放倍速 (0.25, 0.5, 1, 2, 4 等)
+   * @param {number} trackIndex - 轨道索引，不传则设置所有轨道
+   */
+  setPlaybackSpeed(speed, trackIndex) {
+    if (typeof speed !== "number" || speed <= 0) {
+      console.warn("播放倍速必须是大于0的数字");
+      return;
+    }
+
+    this.playbackSpeed = speed;
+
+    if (!this.tracksContainer || !this.tracksContainer.children) {
+      return;
+    }
+
+    // 更新指定轨道或所有轨道的播放倍速
+    if (trackIndex !== undefined) {
+      const track = this.tracksContainer.children[trackIndex];
+      if (track && track.markerLine && track.markerLine.info) {
+        this._updateTrackPlaybackSpeed(track, speed, trackIndex);
+      }
+    } else {
+      // 更新所有轨道
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track && track.markerLine && track.markerLine.info) {
+          this._updateTrackPlaybackSpeed(track, speed, i);
+        }
+      }
+    }
+  }
+
+  /**
+   * 更新单个轨道的播放倍速
+   * @param {HTMLElement} track - 轨道元素
+   * @param {number} speed - 播放倍速
+   * @param {number} trackIndex - 轨道索引
+   */
+  _updateTrackPlaybackSpeed(track, speed, trackIndex) {
+    const markerLine = track.markerLine;
+    const { time, criticalTime } = markerLine.info;
+
+    // 如果刻度线正在移动（未暂停），重新启动以应用新的倍速
+    if (!markerLine.isPaused) {
+      const currentLeft = parseFloat(markerLine.style.left) || 0;
+      // 直接使用秒数计算位置
+      const critical = (criticalTime * this.scaleWidth) / this.scaleSeconds;
+
+      // 重新启动移动，使用新的倍速
+      startMarkerMovement(markerLine, critical, criticalTime, this.scaleWidth, this.scaleSeconds, speed);
+
+      // 同时更新markerLineInfo，确保状态一致性
+      this._updateMarkerLineInfo(trackIndex, {
+        time,
+        criticalTime,
+        isPaused: false,
+      });
+    }
+  }
+
+  /**
+   * 更新指定轨道的markerLineInfo状态
+   * @param {number} trackIndex - 轨道索引
+   * @param {Object} info - 刻度线信息 {time, criticalTime, isPaused}
+   */
+  _updateMarkerLineInfo(trackIndex, info) {
+    // 确保markerLineInfo数组有足够的长度
+    if (!this.markerLineInfo) {
+      this.markerLineInfo = [];
+    }
+
+    // 确保数组长度足够
+    while (this.markerLineInfo.length <= trackIndex) {
+      this.markerLineInfo.push(null);
+    }
+
+    // 更新指定轨道的信息
+    this.markerLineInfo[trackIndex] = info;
+
+    // console.log(`已更新轨道 ${trackIndex} 的markerLineInfo:`, info);
+  }
+
+  /**
+   * 定位刻度线到指定时间位置
+   * @param {string} targetTime - 目标时间 (格式: "HH:MM:SS" 或 "HH:MM")
+   * @param {number} trackIndex - 轨道索引，不传则定位所有轨道
+   */
+  seekToTime(targetTime, trackIndex) {
+    if (!targetTime || typeof targetTime !== "string") {
+      console.warn('目标时间格式错误，应为字符串格式 "HH:MM:SS" 或 "HH:MM"');
+      return;
+    }
+
+    // 解析时间字符串
+    const timeMatch = targetTime.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    if (!timeMatch) {
+      console.warn('时间格式错误，应为 "HH:MM:SS" 或 "HH:MM" 格式');
+      return;
+    }
+
+    const hours = parseInt(timeMatch[1], 10);
+    const minutes = parseInt(timeMatch[2], 10);
+    const seconds = parseInt(timeMatch[3] || "0", 10);
+
+    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+      console.warn("时间值超出有效范围");
+      return;
+    }
+
+    // 将时间转换为当天的秒数
+    const targetSeconds = hours * 3600 + minutes * 60 + seconds;
+
+    if (!this.tracksContainer || !this.tracksContainer.children) {
+      return;
+    }
+
+    const currentDateStr = this.date.toISOString().split("T")[0];
+
+    // 定位指定轨道或所有轨道
+    if (trackIndex !== undefined) {
+      if (trackIndex >= 0 && trackIndex < this.tracksContainer.children.length) {
+        this._seekTrackToTime(trackIndex, targetSeconds, currentDateStr);
+      }
+    } else {
+      // 定位所有轨道
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        this._seekTrackToTime(i, targetSeconds, currentDateStr);
+      }
+    }
+  }
+
+  /**
+   * 定位单个轨道的刻度线到指定时间
+   * @param {number} trackIndex - 轨道索引
+   * @param {number} targetSeconds - 目标时间（秒）
+   * @param {string} currentDateStr - 当前日期字符串
+   */
+  _seekTrackToTime(trackIndex, targetSeconds, currentDateStr) {
+    const track = this.tracksContainer.children[trackIndex];
+    if (!track || !track.markerLine) {
+      return;
+    }
+
+    const trackData = this.data[trackIndex];
+    if (!trackData) {
+      return;
+    }
+
+    const recordings = trackData[currentDateStr] || [];
+    if (recordings.length === 0) {
+      console.warn(`轨道 ${trackIndex} 在当前日期没有录像数据`);
+      return;
+    }
+
+    // 查找目标时间对应的录像段
+    let targetPosition = null;
+    let targetRecording = null;
+
+    for (const recording of recordings) {
+      const startTime = new Date(`${currentDateStr} ${recording.startTime.split(" ")[1]}`);
+      const endTime = new Date(`${currentDateStr} ${recording.endTime.split(" ")[1]}`);
+
+      const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+      const endSeconds = endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
+
+      // 如果目标时间在录像段内
+      if (targetSeconds >= startSeconds && targetSeconds <= endSeconds) {
+        // 直接使用秒数计算位置
+        targetPosition = (targetSeconds * this.scaleWidth) / this.scaleSeconds;
+        targetRecording = recording;
+        break;
+      }
+    }
+
+    // 如果目标时间不在任何录像段内，找到右边第一个录像段的左边（与双击行为一致）
+    if (!targetRecording) {
+      const nextRecording = findNextRecording(recordings, targetSeconds, currentDateStr);
+
+      if (nextRecording) {
+        // 定位到下一个录像段的左边（与双击行为一致）
+        const startTime = new Date(`${currentDateStr} ${nextRecording.startTime.split(" ")[1]}`);
+        const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+        // 直接使用秒数计算位置
+        targetPosition = (startSeconds * this.scaleWidth) / this.scaleSeconds;
+        targetRecording = nextRecording;
+        // 重新设置目标秒数为录像段的开始时间
+        targetSeconds = startSeconds;
+      }
+    }
+
+    if (targetPosition !== null && targetRecording) {
+      const markerLine = track.markerLine;
+
+      // 设置刻度线位置
+      markerLine.style.left = `${targetPosition}px`;
+
+      // 让刻度线可见（移除隐藏状态）
+      markerLine.style.display = "block";
+
+      // 调试信息（可选，生产环境可移除）
+      // console.log(`轨道 ${trackIndex} 定位信息:`, {
+      //   targetPosition: targetPosition + "px",
+      //   scaleWidth: this.scaleWidth,
+      //   scaleSeconds: this.scaleSeconds,
+      //   targetSeconds,
+      //   markerLineVisible: markerLine.style.display,
+      //   markerLineLeft: markerLine.style.left,
+      //   markerLineWidth: markerLine.style.width,
+      //   markerLineColor: markerLine.style.backgroundColor,
+      // });
+
+      // 计算录像段的结束位置作为临界点
+      const endTime = new Date(`${currentDateStr} ${targetRecording.endTime.split(" ")[1]}`);
+      const criticalSeconds = endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
+      // 直接使用秒数计算位置
+      const criticalPosition = (criticalSeconds * this.scaleWidth) / this.scaleSeconds;
+
+      // 更新刻度线信息
+      markerLine.info = {
+        time: targetSeconds,
+        criticalTime: criticalSeconds,
+      };
+
+      // 重置暂停状态并启动移动
+      markerLine.isPaused = false;
+      startMarkerMovement(markerLine, criticalPosition, criticalSeconds, this.scaleWidth, this.scaleSeconds, this.playbackSpeed);
+
+      // 🔥 关键修复：立即更新全局markerLineInfo数组，确保状态在缩放/日期切换时能正确保存和恢复
+      this._updateMarkerLineInfo(trackIndex, {
+        time: targetSeconds,
+        criticalTime: criticalSeconds,
+        isPaused: false,
+      });
+
+      console.log(
+        `轨道 ${trackIndex} 刻度线已定位到 ${Math.floor(targetSeconds / 3600)
+          .toString()
+          .padStart(2, "0")}:${Math.floor((targetSeconds % 3600) / 60)
+          .toString()
+          .padStart(2, "0")}:${(targetSeconds % 60).toString().padStart(2, "0")}`
+      );
+    } else {
+      console.warn(`轨道 ${trackIndex} 无法找到合适的定位位置`);
+    }
   }
 
   // 监听窗口变化

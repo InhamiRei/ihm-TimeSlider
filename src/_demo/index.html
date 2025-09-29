@@ -9,11 +9,35 @@
   <body class="light-theme">
     <div id="timeSlider" class="timeSlider"></div>
     <div class="operate">
+      <h4>基础控制：</h4>
       <button onclick="getTimeLineInfo()">获取时间轴信息</button>
       <button onclick="changeTheme('light-theme')">亮色模式</button>
       <button onclick="changeTheme('dark-theme')">暗黑模式</button>
       <button onclick="markLineOperate('stop')">刻度线停止移动</button>
       <button onclick="markLineOperate('resume')">刻度线恢复移动</button>
+    </div>
+    <div class="operate">
+      <h4>倍速控制：</h4>
+      <button onclick="setPlaybackSpeed(0.25)">0.25x倍速</button>
+      <button onclick="setPlaybackSpeed(0.5)">0.5x倍速</button>
+      <button onclick="setPlaybackSpeed(1)">1x正常速度</button>
+      <button onclick="setPlaybackSpeed(2)">2x倍速</button>
+      <button onclick="setPlaybackSpeed(4)">4x倍速</button>
+    </div>
+    <div class="operate">
+      <h4>定位控制：</h4>
+      <div style="margin-bottom: 10px">
+        <select id="trackSelector">
+          <option value="all">所有轨道</option>
+          <option value="0">第1条轨道</option>
+          <option value="1">第2条轨道</option>
+        </select>
+      </div>
+      <button onclick="seekToTimeWithTrack('00:10')">定位到00:10</button>
+      <button onclick="seekToTimeWithTrack('12:00')">定位到12:00</button>
+      <button onclick="seekToTimeWithTrack('18:30')">定位到18:30</button>
+      <input type="text" id="customTime" placeholder="输入时间(HH:MM:SS)" />
+      <button onclick="seekToTimeWithTrack(document.getElementById('customTime').value)">自定义定位</button>
     </div>
     <script type="module" src="./index.js"></script>
   </body>

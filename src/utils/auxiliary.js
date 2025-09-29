@@ -131,3 +131,43 @@ export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
     return 0;
   }
 };
+
+/**
+ * 寻找指定时间之后的下一个录像段
+ * @function
+ * @param {Array} recordings - 录像数据数组
+ * @param {number} targetSeconds - 目标时间（秒）
+ * @param {string} currentDateStr - 当前日期字符串
+ * @returns {Object|null} - 找到的录像段对象或null
+ * @description
+ * - 该函数在录像数据中寻找目标时间之后最近的录像段
+ * - 用于定位控制和双击事件的共同逻辑
+ * @example
+ * findNextRecording(recordings, 3600, "2025-09-09"); // 寻找1小时后的第一个录像段
+ */
+export const findNextRecording = (recordings, targetSeconds, currentDateStr) => {
+  let nextRecording = null;
+
+  // 寻找目标时间右边第一个录像段
+  for (const recording of recordings) {
+    const startTime = new Date(`${currentDateStr} ${recording.startTime.split(" ")[1]}`);
+    const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+
+    // 如果录像段的开始时间大于目标时间，这就是我们要找的下一个录像段
+    if (startSeconds > targetSeconds) {
+      if (!nextRecording) {
+        nextRecording = recording;
+      } else {
+        // 如果已经找到一个，比较哪个更近
+        const nextStartTime = new Date(`${currentDateStr} ${nextRecording.startTime.split(" ")[1]}`);
+        const nextStartSeconds = nextStartTime.getHours() * 3600 + nextStartTime.getMinutes() * 60 + nextStartTime.getSeconds();
+
+        if (startSeconds < nextStartSeconds) {
+          nextRecording = recording;
+        }
+      }
+    }
+  }
+
+  return nextRecording;
+};

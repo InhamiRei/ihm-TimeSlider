@@ -13,8 +13,20 @@
 .operate {
   width: 100vw;
   display: flex;
+  align-items: center;
   margin-top: 30px;
   gap: 10px;
+  h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  input {
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 200px;
+  }
 }
 
 /* 暗色主题 */
@@ -37,6 +49,11 @@
   .operate button:active {
     background-color: rgba(255, 255, 255, 0.2);
   }
+  .operate input {
+    background-color: #2a2d3a;
+    border: 1px solid #c7c7c7;
+    color: #c7c7c7;
+  }
 }
 
 /* 亮色主题 */
@@ -58,5 +75,10 @@
   }
   .operate button:active {
     background-color: rgba(0, 0, 0, 0.2);
+  }
+  .operate input {
+    background-color: #ffffff;
+    border: 1px solid #6f6f6f;
+    color: #333333;
   }
 }

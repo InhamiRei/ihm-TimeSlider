@@ -1,4 +1,4 @@
-import { calculateTimeFromPosition, calculatePositionFromTime } from "./auxiliary.js";
+import { calculateTimeFromPosition, parseTimeToSeconds } from "./auxiliary.js";
 import { generateTimeObj } from "./common.js";
 
 /**
@@ -8,20 +8,24 @@ import { generateTimeObj } from "./common.js";
  * @param {number} criticalTime - 临界时间
  * @param {number} scaleWidth - 刻度宽度
  * @param {number} scaleSeconds - 刻度秒间隔
+ * @param {number} playbackSpeed - 播放倍速，默认为1
  */
-export const startMarkerMovement = (markerLine, critical, criticalTime, scaleWidth, scaleSeconds) => {
+export const startMarkerMovement = (markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed = 1) => {
   // 清除已有的动画帧，防止重复启动
   if (markerLine.animationFrameId) {
     cancelAnimationFrame(markerLine.animationFrameId);
     markerLine.animationFrameId = null;
   }
 
-  // 计算每秒钟应移动的像素
-  const pixelsPerSecond = scaleWidth / scaleSeconds; // 每秒钟移动的像素
+  // 计算每秒钟应移动的像素（根据倍速调整）
+  const pixelsPerSecond = (scaleWidth / scaleSeconds) * playbackSpeed; // 每秒钟移动的像素
 
   // 记录上一次执行的时间
   let lastTime = null;
   const accumulatedTime = { value: 0 };
+
+  // 根据倍速调整更新间隔（倍速越高，更新越频繁以保持流畅度）
+  const updateInterval = Math.max(100, 1000 / playbackSpeed); // 最小100ms间隔，保证流畅度
 
   const animate = (timestamp) => {
     // 如果有暂停就不执行
@@ -38,25 +42,28 @@ export const startMarkerMovement = (markerLine, critical, criticalTime, scaleWid
     // 累积时间，确保动画不会因为帧率波动而不准确
     accumulatedTime.value += deltaTime;
 
-    // 每秒更新一次位置
-    if (accumulatedTime.value > 1000) {
+    // 根据倍速调整的更新频率
+    if (accumulatedTime.value > updateInterval) {
       const currentLeft = parseFloat(markerLine.style.left) || 0;
-      const newLeft = currentLeft + pixelsPerSecond;
+      const moveDistance = pixelsPerSecond * (accumulatedTime.value / 1000);
+      const newLeft = currentLeft + moveDistance;
 
       if (newLeft >= critical) {
         // 到达临界点，停止移动
         markerLine.style.left = `${critical}px`;
-        const time = calculateTimeFromPosition(critical, scaleWidth, scaleSeconds);
+        const timeStr = calculateTimeFromPosition(critical, scaleWidth, scaleSeconds);
+        const time = parseTimeToSeconds(timeStr); // 转换为秒数格式
         markerLine.info = { time, criticalTime };
         return; // 不再继续请求动画帧
       } else {
         markerLine.style.left = `${newLeft}px`;
-        const time = calculateTimeFromPosition(newLeft, scaleWidth, scaleSeconds);
+        const timeStr = calculateTimeFromPosition(newLeft, scaleWidth, scaleSeconds);
+        const time = parseTimeToSeconds(timeStr); // 转换为秒数格式
         markerLine.info = { time, criticalTime };
       }
 
-      // 重置累积时间，确保每秒只移动一次
-      accumulatedTime.value = accumulatedTime.value % 1000;
+      // 重置累积时间
+      accumulatedTime.value = 0;
     }
 
     // 请求下一帧
