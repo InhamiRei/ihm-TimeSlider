@@ -61,8 +61,8 @@ export default class ihm_TimeSlider {
     this.timeIndicatorText = null; // 时间指示文字
 
     this.markerLineInfo = []; // 存储刻度线的数据，轨道信息数组，用来还原刻度线的位置
-    this.markerLineInstance = {}; // 存储刻度线的实例，不会经常变化
     this.markerLineStates = {}; // 存储不同日期下的markerLine状态
+    this.trackGlobalStates = {}; // 🔥 NEW: 每条轨道的全局状态，记录每条轨道当前活跃在哪个日期
     this.playbackSpeed = 1; // 播放倍速，默认为1倍速
 
     this.render();
@@ -130,6 +130,7 @@ export default class ihm_TimeSlider {
       showDownloadBtn: this.showDownloadBtn,
       showMarkerLine: this.showMarkerLine,
       playbackSpeed: this.playbackSpeed,
+      onMarkerLineUpdate: (trackIndex, info) => this._handleMarkerLineUpdate(trackIndex, info), // 添加刻度线更新回调
     };
 
     this.tracksContainer = createTracks(tracksConfig);
@@ -191,7 +192,29 @@ export default class ihm_TimeSlider {
    * @returns {Array|null} markerLine状态数组或null
    */
   _getMarkerLineStateForDate(dateStr) {
-    return this.markerLineStates[dateStr] || null;
+    const savedStates = this.markerLineStates[dateStr] || [];
+    const resultStates = [];
+
+    // 🔥 NEW: 检查每条轨道的全局状态，只恢复在当前日期活跃的轨道状态
+    Object.keys(this.trackGlobalStates).forEach((trackIndexStr) => {
+      const trackIndex = parseInt(trackIndexStr);
+      const globalState = this.trackGlobalStates[trackIndex];
+
+      // 如果轨道的活跃日期是当前日期，则恢复保存的状态
+      if (globalState && globalState.activeDate === dateStr && savedStates[trackIndex]) {
+        resultStates[trackIndex] = savedStates[trackIndex];
+      } else {
+        // 否则该轨道在当前日期应该是空状态
+        resultStates[trackIndex] = null;
+      }
+    });
+
+    // 如果没有任何轨道的全局状态，返回原始保存的状态（向后兼容）
+    if (Object.keys(this.trackGlobalStates).length === 0) {
+      return savedStates.length > 0 ? savedStates : null;
+    }
+
+    return resultStates.length > 0 ? resultStates : null;
   }
 
   // 切换到前一天
@@ -283,11 +306,59 @@ export default class ihm_TimeSlider {
   // 停止刻度线移动
   stopMarkLine(trackIndex) {
     stopMarkLine(this.tracksContainer, trackIndex);
+
+    // 🔥 同步状态：更新对应轨道的暂停状态
+    if (trackIndex !== undefined) {
+      const track = this.tracksContainer.children[trackIndex];
+      if (track && track.markerLine && track.markerLine.info) {
+        this._handleMarkerLineUpdate(trackIndex, {
+          time: track.markerLine.info.time,
+          criticalTime: track.markerLine.info.criticalTime,
+          isPaused: true,
+        });
+      }
+    } else {
+      // 更新所有轨道的暂停状态
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track && track.markerLine && track.markerLine.info) {
+          this._handleMarkerLineUpdate(i, {
+            time: track.markerLine.info.time,
+            criticalTime: track.markerLine.info.criticalTime,
+            isPaused: true,
+          });
+        }
+      }
+    }
   }
 
   // 恢复刻度线移动
   resumeMarkLine(trackIndex) {
     resumeMarkLine(this.tracksContainer, trackIndex);
+
+    // 🔥 同步状态：更新对应轨道的恢复状态
+    if (trackIndex !== undefined) {
+      const track = this.tracksContainer.children[trackIndex];
+      if (track && track.markerLine && track.markerLine.info) {
+        this._handleMarkerLineUpdate(trackIndex, {
+          time: track.markerLine.info.time,
+          criticalTime: track.markerLine.info.criticalTime,
+          isPaused: false,
+        });
+      }
+    } else {
+      // 更新所有轨道的恢复状态
+      for (let i = 0; i < this.tracksContainer.children.length; i++) {
+        const track = this.tracksContainer.children[i];
+        if (track && track.markerLine && track.markerLine.info) {
+          this._handleMarkerLineUpdate(i, {
+            time: track.markerLine.info.time,
+            criticalTime: track.markerLine.info.criticalTime,
+            isPaused: false,
+          });
+        }
+      }
+    }
   }
 
   // 获取时间轴的信息
@@ -385,7 +456,7 @@ export default class ihm_TimeSlider {
       startMarkerMovement(markerLine, critical, criticalTime, this.scaleWidth, this.scaleSeconds, speed);
 
       // 同时更新markerLineInfo，确保状态一致性
-      this._updateMarkerLineInfo(trackIndex, {
+      this._handleMarkerLineUpdate(trackIndex, {
         time,
         criticalTime,
         isPaused: false,
@@ -413,6 +484,64 @@ export default class ihm_TimeSlider {
     this.markerLineInfo[trackIndex] = info;
 
     // console.log(`已更新轨道 ${trackIndex} 的markerLineInfo:`, info);
+  }
+
+  /**
+   * 处理轨道刻度线更新的回调
+   * @param {number} trackIndex - 轨道索引
+   * @param {Object} info - 刻度线信息 {time, criticalTime, isPaused}
+   * @param {boolean} isNewClick - 是否是新的双击操作（需要清空其他日期的状态）
+   */
+  _handleMarkerLineUpdate(trackIndex, info, isNewClick = false) {
+    const currentDateStr = this.date.toISOString().split("T")[0];
+
+    // 🔥 NEW: 如果是新的双击操作，清空该轨道在所有其他日期的状态
+    if (isNewClick) {
+      this._clearTrackStateFromOtherDates(trackIndex, currentDateStr);
+    }
+
+    // 更新内存中的markerLineInfo
+    this._updateMarkerLineInfo(trackIndex, info);
+
+    // 同时更新当前日期的状态存储，确保日期切换时能正确保存状态
+    if (!this.markerLineStates[currentDateStr]) {
+      this.markerLineStates[currentDateStr] = [];
+    }
+
+    // 确保数组长度足够
+    while (this.markerLineStates[currentDateStr].length <= trackIndex) {
+      this.markerLineStates[currentDateStr].push(null);
+    }
+
+    // 更新对应轨道的状态
+    this.markerLineStates[currentDateStr][trackIndex] = info;
+
+    // 🔥 NEW: 更新轨道的全局状态，记录该轨道当前活跃在当前日期
+    this.trackGlobalStates[trackIndex] = {
+      activeDate: currentDateStr,
+      lastUpdated: Date.now(),
+    };
+  }
+
+  /**
+   * 清空指定轨道在其他所有日期的状态
+   * @param {number} trackIndex - 轨道索引
+   * @param {string} keepDateStr - 要保留的日期，其他日期的状态都会被清空
+   */
+  _clearTrackStateFromOtherDates(trackIndex, keepDateStr) {
+    // 遍历所有日期的状态，清空指定轨道在其他日期的状态
+    Object.keys(this.markerLineStates).forEach((dateStr) => {
+      if (dateStr !== keepDateStr && this.markerLineStates[dateStr]) {
+        // 确保数组长度足够
+        while (this.markerLineStates[dateStr].length <= trackIndex) {
+          this.markerLineStates[dateStr].push(null);
+        }
+        // 清空该轨道在这个日期的状态
+        this.markerLineStates[dateStr][trackIndex] = null;
+      }
+    });
+
+    console.log(`已清空轨道 ${trackIndex} 在除 ${keepDateStr} 外所有日期的状态`);
   }
 
   /**
@@ -479,6 +608,18 @@ export default class ihm_TimeSlider {
     const trackData = this.data[trackIndex];
     if (!trackData) {
       return;
+    }
+
+    // 🔥 录像回放逻辑：清空当前轨道之前的刻度线状态
+    const markerLine = track.markerLine;
+    // 停止之前的移动动画
+    if (markerLine.movementInterval) {
+      clearInterval(markerLine.movementInterval);
+      markerLine.movementInterval = null;
+    }
+    if (markerLine.animationFrameId) {
+      cancelAnimationFrame(markerLine.animationFrameId);
+      markerLine.animationFrameId = null;
     }
 
     const recordings = trackData[currentDateStr] || [];
@@ -561,11 +702,15 @@ export default class ihm_TimeSlider {
       startMarkerMovement(markerLine, criticalPosition, criticalSeconds, this.scaleWidth, this.scaleSeconds, this.playbackSpeed);
 
       // 🔥 关键修复：立即更新全局markerLineInfo数组，确保状态在缩放/日期切换时能正确保存和恢复
-      this._updateMarkerLineInfo(trackIndex, {
-        time: targetSeconds,
-        criticalTime: criticalSeconds,
-        isPaused: false,
-      });
+      this._handleMarkerLineUpdate(
+        trackIndex,
+        {
+          time: targetSeconds,
+          criticalTime: criticalSeconds,
+          isPaused: false,
+        },
+        true
+      ); // seekToTime 也是新操作，清空该轨道在其他日期的状态
 
       console.log(
         `轨道 ${trackIndex} 刻度线已定位到 ${Math.floor(targetSeconds / 3600)
@@ -632,7 +777,7 @@ export default class ihm_TimeSlider {
     this.tracksContainer = null;
     this.timeIndicatorText = null;
     this.markerLineInfo = [];
-    this.markerLineInstance = {};
     this.markerLineStates = {};
+    this.trackGlobalStates = {}; // 清空轨道全局状态
   }
 }

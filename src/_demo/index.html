@@ -18,21 +18,50 @@
     </div>
     <div class="operate">
       <h4>倍速控制：</h4>
-      <button onclick="setPlaybackSpeed(0.25)">0.25x倍速</button>
-      <button onclick="setPlaybackSpeed(0.5)">0.5x倍速</button>
-      <button onclick="setPlaybackSpeed(1)">1x正常速度</button>
-      <button onclick="setPlaybackSpeed(2)">2x倍速</button>
-      <button onclick="setPlaybackSpeed(4)">4x倍速</button>
+      <select
+        id="speedTrackSelector"
+        style="
+          height: 38px;
+          padding: 0 30px 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          appearance: none;
+          background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 12 8&quot;><path fill=&quot;%23666&quot; d=&quot;M6 8L0 2h12L6 8z&quot;/></svg>');
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 10px;
+        "
+      >
+        <option value="all">所有轨道</option>
+        <option value="0">第1条轨道</option>
+        <option value="1">第2条轨道</option>
+      </select>
+      <button onclick="setPlaybackSpeedWithTrack(0.25)">0.25x倍速</button>
+      <button onclick="setPlaybackSpeedWithTrack(0.5)">0.5x倍速</button>
+      <button onclick="setPlaybackSpeedWithTrack(1)">1x正常速度</button>
+      <button onclick="setPlaybackSpeedWithTrack(2)">2x倍速</button>
+      <button onclick="setPlaybackSpeedWithTrack(4)">4x倍速</button>
     </div>
     <div class="operate">
       <h4>定位控制：</h4>
-      <div style="margin-bottom: 10px">
-        <select id="trackSelector">
-          <option value="all">所有轨道</option>
-          <option value="0">第1条轨道</option>
-          <option value="1">第2条轨道</option>
-        </select>
-      </div>
+      <select
+        id="trackSelector"
+        style="
+          height: 38px;
+          padding: 0 30px 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          appearance: none;
+          background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 12 8&quot;><path fill=&quot;%23666&quot; d=&quot;M6 8L0 2h12L6 8z&quot;/></svg>');
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 10px;
+        "
+      >
+        <option value="all">所有轨道</option>
+        <option value="0">第1条轨道</option>
+        <option value="1">第2条轨道</option>
+      </select>
       <button onclick="seekToTimeWithTrack('00:10')">定位到00:10</button>
       <button onclick="seekToTimeWithTrack('12:00')">定位到12:00</button>
       <button onclick="seekToTimeWithTrack('18:30')">定位到18:30</button>

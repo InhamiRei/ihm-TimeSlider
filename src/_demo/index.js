@@ -170,3 +170,18 @@ window.seekToTimeWithTrack = (time) => {
     console.log(`第${trackIndex + 1}条轨道的刻度线已定位到 ${time}`);
   }
 };
+
+// 根据轨道选择器设置播放倍速
+window.setPlaybackSpeedWithTrack = (speed) => {
+  const speedTrackSelector = document.getElementById("speedTrackSelector");
+  const selectedTrack = speedTrackSelector.value;
+
+  if (selectedTrack === "all") {
+    timeline.setPlaybackSpeed(speed);
+    console.log(`所有轨道的播放倍速已设置为 ${speed}x`);
+  } else {
+    const trackIndex = parseInt(selectedTrack, 10);
+    timeline.setPlaybackSpeed(speed, trackIndex);
+    console.log(`第${trackIndex + 1}条轨道的播放倍速已设置为 ${speed}x`);
+  }
+};

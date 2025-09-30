@@ -179,6 +179,17 @@ export function createTrack(config) {
 
         // 只有在showMarkerLine为true时才显示和移动标记线
         if (showMarkerLine) {
+          // 🔥 录像回放逻辑：每次双击时清空当前轨道之前的刻度线状态
+          // 停止当前轨道的移动动画
+          if (markerLine.movementInterval) {
+            clearInterval(markerLine.movementInterval);
+            markerLine.movementInterval = null;
+          }
+          if (markerLine.animationFrameId) {
+            cancelAnimationFrame(markerLine.animationFrameId);
+            markerLine.animationFrameId = null;
+          }
+
           // 获取当前轨道的刻度线，并移动到点击位置
           markerLine.style.left = `${block_left}px`;
 
@@ -187,8 +198,31 @@ export function createTrack(config) {
           const critical = blueBlock_width + blueBlock_left - container_left;
           const criticalTime = parseTimeToSeconds(block.end); // 转换为秒数格式
 
+          // 计算开始时间（秒数）
+          const startTime = calculateTimeFromPosition(block_left, scaleWidth, scaleSeconds);
+
+          // 更新刻度线信息
+          markerLine.info = {
+            time: startTime,
+            criticalTime: criticalTime,
+          };
+          markerLine.isPaused = false;
+
           // 启动刻度线的移动
           startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
+
+          // 🔥 关键：通知父组件更新对应轨道的markerLineInfo状态（双击是新操作）
+          if (config.onMarkerLineUpdate) {
+            config.onMarkerLineUpdate(
+              trackIndex,
+              {
+                time: startTime,
+                criticalTime: criticalTime,
+                isPaused: false,
+              },
+              true
+            ); // 传递 isNewClick = true
+          }
         }
 
         // 触发双击事件回调
@@ -226,6 +260,17 @@ export function createTrack(config) {
 
           // 只有在showMarkerLine为true时才显示和移动标记线
           if (showMarkerLine) {
+            // 🔥 录像回放逻辑：每次双击时清空当前轨道之前的刻度线状态
+            // 停止当前轨道的移动动画
+            if (markerLine.movementInterval) {
+              clearInterval(markerLine.movementInterval);
+              markerLine.movementInterval = null;
+            }
+            if (markerLine.animationFrameId) {
+              cancelAnimationFrame(markerLine.animationFrameId);
+              markerLine.animationFrameId = null;
+            }
+
             // 获取当前轨道的刻度线，并移动到下一个蓝色模块左侧
             markerLine.style.left = `${nextBlueBlock_left}px`;
 
@@ -234,8 +279,31 @@ export function createTrack(config) {
             const critical = (endSeconds * scaleWidth) / scaleSeconds;
             const criticalTime = endSeconds; // 使用秒数格式，保持与seekToTime一致
 
+            // 计算开始时间（秒数）
+            const startSeconds = parseTimeToSeconds(nextBlueBlock.start);
+
+            // 更新刻度线信息
+            markerLine.info = {
+              time: startSeconds,
+              criticalTime: criticalTime,
+            };
+            markerLine.isPaused = false;
+
             // 启动刻度线的移动
             startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
+
+            // 🔥 关键：通知父组件更新对应轨道的markerLineInfo状态（双击是新操作）
+            if (config.onMarkerLineUpdate) {
+              config.onMarkerLineUpdate(
+                trackIndex,
+                {
+                  time: startSeconds,
+                  criticalTime: criticalTime,
+                  isPaused: false,
+                },
+                true
+              ); // 传递 isNewClick = true
+            }
           }
 
           // 触发双击事件回调
@@ -357,6 +425,7 @@ export function createTracks(config) {
       showDownloadBtn: config.showDownloadBtn,
       showMarkerLine,
       playbackSpeed,
+      onMarkerLineUpdate: config.onMarkerLineUpdate, // 传递回调函数
     };
 
     const { trackRow } = createTrack(trackConfig);
