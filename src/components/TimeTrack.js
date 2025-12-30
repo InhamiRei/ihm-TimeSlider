@@ -1,12 +1,12 @@
-import { _styles } from "../common/variable.js";
-import { createElement, generateTimeObj, customStyle } from "../utils/common.js";
-import { __styles_leftInfoContainer } from "../common/styles.js";
-import { downloadSVG } from "../common/svg.js";
-import { createTimeMarker } from "./TimeMarker.js";
-import { bindHoverEvents } from "../utils/eventBind.js";
-import { startMarkerMovement } from "../utils/markLine.js";
-import { calculateTimeFromPosition, parseTimeToSeconds } from "../utils/auxiliary.js";
-import { createTimeBlocks } from "../utils/common.js";
+import { _styles } from '../common/variable.js';
+import { createElement, generateTimeObj, customStyle } from '../utils/common.js';
+import { __styles_leftInfoContainer } from '../common/styles.js';
+import { downloadSVG } from '../common/svg.js';
+import { createTimeMarker } from './TimeMarker.js';
+import { bindHoverEvents } from '../utils/eventBind.js';
+import { startMarkerMovement } from '../utils/markLine.js';
+import { calculateTimeFromPosition, parseTimeToSeconds } from '../utils/auxiliary.js';
+import { createTimeBlocks } from '../utils/common.js';
 
 /**
  * 创建单个轨道
@@ -35,25 +35,31 @@ export function createTrack(config) {
   } = config;
 
   // 创建轨道行
-  const trackRow = createElement("div", `${flag}-ihm-timeSlider-trackContainer-trackRow`, {
-    position: "relative",
-    flexGrow: "1",
+  const trackRow = createElement('div', `${flag}-ihm-timeSlider-trackContainer-trackRow`, {
+    position: 'relative',
+    flexGrow: '1',
     height: `${config.trackHeight || 25}px`,
     border: `1px solid ${_styles[theme].borderColor}`,
-    borderBottom: isLastTrack ? `1px solid ${_styles[theme].borderColor}` : "none",
-    display: "flex",
+    borderBottom: isLastTrack ? `1px solid ${_styles[theme].borderColor}` : 'none',
+    display: 'flex',
     backgroundColor: _styles[theme].trackBackgroundColor,
   });
 
   // 创建左侧信息容器
-  const infoContainer = createElement("div", `${flag}-ihm-timeSlider-trackContainer-trackRow-info`, __styles_leftInfoContainer(flag, styles, theme));
+  const infoContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-trackContainer-trackRow-info`,
+    __styles_leftInfoContainer(flag, styles, theme)
+  );
 
   infoContainer.innerHTML = `
     <div style="width: 100%; display: flex; align-items: center; justify-content: space-between;">
       <div style="flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center;">
         <span style="font-size: 14px; color: ${
           _styles[theme].leftTextColor
-        }; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;" title="${extInfo.name}">
+        }; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;" title="${
+          extInfo.name
+        }">
           ${extInfo.name}
         </span>
       </div>
@@ -64,7 +70,7 @@ export function createTrack(config) {
         ${downloadSVG(flag, styles, theme)}
       </span>
       `
-          : ""
+          : ''
       }
     </div>
   `;
@@ -72,7 +78,7 @@ export function createTrack(config) {
   // 绑定下载按钮事件
   const downloadBtn = infoContainer.querySelector(`.${flag}-ihm-timeSlider-download-btn`);
   if (downloadBtn && onDownloadClick) {
-    downloadBtn.addEventListener("click", (event) => {
+    downloadBtn.addEventListener('click', (event) => {
       onDownloadClick({
         info: extInfo,
         event,
@@ -83,22 +89,30 @@ export function createTrack(config) {
   trackRow.appendChild(infoContainer);
 
   // 创建拖拽容器
-  const dragContainer = createElement("div", `${flag}-ihm-timeSlider-trackContainer-dragContainer`, {
-    position: "relative",
-    overflow: "hidden",
-    flexGrow: 1,
-    height: "100%",
-  });
+  const dragContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-trackContainer-dragContainer`,
+    {
+      position: 'relative',
+      overflow: 'hidden',
+      flexGrow: 1,
+      height: '100%',
+    }
+  );
 
   // 创建滑块容器
-  const sliderContainer = createElement("div", `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`, {
-    position: "absolute",
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    left: "0",
-    top: "0",
-  });
+  const sliderContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`,
+    {
+      position: 'absolute',
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+      left: '0',
+      top: '0',
+    }
+  );
 
   // 创建标记线
   const markerLine = createTimeMarker(flag, styles, theme);
@@ -107,7 +121,7 @@ export function createTrack(config) {
 
   // 如果不显示标记线，则隐藏它
   if (!showMarkerLine) {
-    markerLine.style.display = "none";
+    markerLine.style.display = 'none';
   }
 
   // 创建时间指示线
@@ -141,12 +155,19 @@ export function createTrack(config) {
 
         // 只在未暂停时启动刻度线的移动
         if (!markerLine.isPaused) {
-          startMarkerMovement(markerLine, newCritical, infoCriticalTime, scaleWidth, scaleSeconds, playbackSpeed);
+          startMarkerMovement(
+            markerLine,
+            newCritical,
+            infoCriticalTime,
+            scaleWidth,
+            scaleSeconds,
+            playbackSpeed
+          );
         }
       } else {
         // 如果位置不合理，隐藏markerLine或重置到起始位置
-        console.warn("MarkerLine position out of range, resetting to 0");
-        markerLine.style.left = "0px";
+        console.warn('MarkerLine position out of range, resetting to 0');
+        markerLine.style.left = '0px';
         markerLine.info = null;
       }
     }
@@ -156,17 +177,21 @@ export function createTrack(config) {
   const timeBlocks = createTimeBlocks(recordings, extInfo, scaleWidth, scaleSeconds, theme);
 
   timeBlocks.forEach((block, blockIndex) => {
-    const recordingSegment = createElement("div", `${flag}-ihm-timeSlider-trackContainer-trackRow-slider-block`, {
-      height: "100%",
-      width: `${block.width}px`,
-      backgroundColor: `${block.color}`,
-    });
+    const recordingSegment = createElement(
+      'div',
+      `${flag}-ihm-timeSlider-trackContainer-trackRow-slider-block`,
+      {
+        height: '100%',
+        width: `${block.width}px`,
+        backgroundColor: `${block.color}`,
+      }
+    );
 
-    const themeBlockColor = theme === "dark-theme" ? "#626773" : "#dbdee7";
+    const themeBlockColor = theme === 'dark-theme' ? '#4c5889' : '#aacdf4';
 
     // 只有蓝色的滑块需要绑定事件
     if (block.color === themeBlockColor) {
-      recordingSegment.addEventListener("dblclick", (event) => {
+      recordingSegment.addEventListener('dblclick', (event) => {
         // 滑块容器距离左侧的距离
         const container_left = sliderContainer.getBoundingClientRect().left;
         // 鼠标点击距离左侧的距离
@@ -194,7 +219,8 @@ export function createTrack(config) {
           markerLine.style.left = `${block_left}px`;
 
           // 计算临界宽度
-          const { width: blueBlock_width, left: blueBlock_left } = recordingSegment.getBoundingClientRect();
+          const { width: blueBlock_width, left: blueBlock_left } =
+            recordingSegment.getBoundingClientRect();
           const critical = blueBlock_width + blueBlock_left - container_left;
           const criticalTime = parseTimeToSeconds(block.end); // 转换为秒数格式
 
@@ -209,7 +235,14 @@ export function createTrack(config) {
           markerLine.isPaused = false;
 
           // 启动刻度线的移动
-          startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
+          startMarkerMovement(
+            markerLine,
+            critical,
+            criticalTime,
+            scaleWidth,
+            scaleSeconds,
+            playbackSpeed
+          );
 
           // 🔥 关键：通知父组件更新对应轨道的markerLineInfo状态（双击是新操作）
           if (config.onMarkerLineUpdate) {
@@ -232,8 +265,8 @@ export function createTrack(config) {
       });
     }
     // 为无色模块添加点击事件
-    else if (block.color === "transparent") {
-      recordingSegment.addEventListener("dblclick", (event) => {
+    else if (block.color === 'transparent') {
+      recordingSegment.addEventListener('dblclick', (event) => {
         // 寻找下一个蓝色模块
         let nextBlueBlockIndex = -1;
         for (let i = blockIndex + 1; i < timeBlocks.length; i++) {
@@ -290,7 +323,14 @@ export function createTrack(config) {
             markerLine.isPaused = false;
 
             // 启动刻度线的移动
-            startMarkerMovement(markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed);
+            startMarkerMovement(
+              markerLine,
+              critical,
+              criticalTime,
+              scaleWidth,
+              scaleSeconds,
+              playbackSpeed
+            );
 
             // 🔥 关键：通知父组件更新对应轨道的markerLineInfo状态（双击是新操作）
             if (config.onMarkerLineUpdate) {
@@ -308,10 +348,15 @@ export function createTrack(config) {
 
           // 触发双击事件回调
           if (onSegmentDblClick) {
-            onSegmentDblClick({ ...timeObj, info: nextBlueBlock.extInfo, block: nextBlueBlock, event });
+            onSegmentDblClick({
+              ...timeObj,
+              info: nextBlueBlock.extInfo,
+              block: nextBlueBlock,
+              event,
+            });
           }
         } else {
-          console.log("无蓝色模块");
+          console.log('无蓝色模块');
         }
       });
     }
@@ -320,7 +365,15 @@ export function createTrack(config) {
   });
 
   // 绑定悬停事件
-  bindHoverEvents(sliderContainer, timeIndicatorLine, timeIndicatorText, timelineContainer, scaleWidth, scaleSeconds, styles);
+  bindHoverEvents(
+    sliderContainer,
+    timeIndicatorLine,
+    timeIndicatorText,
+    timelineContainer,
+    scaleWidth,
+    scaleSeconds,
+    styles
+  );
 
   dragContainer.appendChild(sliderContainer);
   trackRow.appendChild(dragContainer);
@@ -358,27 +411,27 @@ export function createTracks(config) {
   } = config;
 
   // 创建轨道容器
-  const tracksContainer = createElement("div", `${flag}-ihm-timeSlider-trackContainer`, {
-    position: "relative",
-    maxHeight: customStyle(styles.scrollHeight, "none"),
-    overflow: "auto",
+  const tracksContainer = createElement('div', `${flag}-ihm-timeSlider-trackContainer`, {
+    position: 'relative',
+    maxHeight: customStyle(styles.scrollHeight, 'none'),
+    overflow: 'auto',
   });
 
-  const currentDateStr = date.toISOString().split("T")[0];
+  const currentDateStr = date.toISOString().split('T')[0];
   const recordingsPerTrack = data.map((data) => data[currentDateStr] || []);
   const extInfoArr = data.map((data) => data.extInfo || {});
 
   // 如果没有数据，显示空状态
   if (!recordingsPerTrack || recordingsPerTrack.length === 0) {
-    const emptyContainer = createElement("div", `${flag}-ihm-timeSlider-empty`, {
+    const emptyContainer = createElement('div', `${flag}-ihm-timeSlider-empty`, {
       border: `1px solid ${_styles[theme].borderColor}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      height: "100%",
-      minHeight: "100px",
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      minHeight: '100px',
       color: _styles[theme].emptyTextColor,
-      fontSize: "14px",
+      fontSize: '14px',
     });
 
     emptyContainer.innerHTML = emptySVG(flag, styles, theme);

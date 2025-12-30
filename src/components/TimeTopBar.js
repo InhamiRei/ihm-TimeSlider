@@ -1,8 +1,8 @@
-import { _styles } from "../common/variable.js";
-import { createElement, createScale, customStyle } from "../utils/common.js";
-import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from "../common/svg.js";
-import { bindDragEvents } from "../utils/eventBind.js";
-import { createTimeIndicatorText } from "./TimeMarker.js";
+import { _styles } from '../common/variable.js';
+import { createElement, createScale, customStyle } from '../utils/common.js';
+import { plusSVG, prevDaySVG, nextDaySVG, minusSVG } from '../common/svg.js';
+import { bindDragEvents } from '../utils/eventBind.js';
+import { createTimeIndicatorText } from './TimeMarker.js';
 
 /**
  * 创建顶部栏组件
@@ -25,31 +25,35 @@ export function createTopBar(config) {
     onDateClick,
   } = config;
 
-  const topbarContainer = createElement("div", `${flag}-ihm-timeSlider-topbarContainer`, {
-    position: "relative",
-    height: customStyle(styles.headerHeight, "30px"),
+  const topbarContainer = createElement('div', `${flag}-ihm-timeSlider-topbarContainer`, {
+    position: 'relative',
+    height: customStyle(styles.headerHeight, '30px'),
     border: `1px solid ${_styles[theme].borderColor}`,
-    borderBottom: "none",
-    display: "flex",
+    borderBottom: 'none',
+    display: 'flex',
   });
 
   // 左侧的时间和4个按钮
-  const timeAndButtonContainer = createElement("div", `${flag}-ihm-timeSlider-topbarContainer-info`, {
-    position: "relative",
-    width: "160px",
-    minWidth: "160px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-around",
-    borderRight: `1px solid ${_styles[theme].borderColor}`,
-  });
+  const timeAndButtonContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-topbarContainer-info`,
+    {
+      position: 'relative',
+      width: '160px',
+      minWidth: '160px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      borderRight: `1px solid ${_styles[theme].borderColor}`,
+    }
+  );
 
   timeAndButtonContainer.innerHTML = `
     ${plusSVG(flag, styles, theme)}
     ${prevDaySVG(flag, styles, theme)}
     <span class="${flag}-ihm-timeSlider-date" style="font-size: 14px; color: ${
-    _styles[theme].leftTextColor
-  }; cursor: initial;pointer-events: none;">${date.toISOString().split("T")[0]}</span>
+      _styles[theme].leftTextColor
+    }; cursor: initial;pointer-events: none;">${date.toISOString().split('T')[0]}</span>
     ${nextDaySVG(flag, styles, theme)}
     ${minusSVG(flag, styles, theme)}
   `;
@@ -58,46 +62,54 @@ export function createTopBar(config) {
   // 绑定日期点击事件
   const dateSpan = timeAndButtonContainer.querySelector(`.${flag}-ihm-timeSlider-date`);
   if (dateSpan) {
-    dateSpan.addEventListener("click", onDateClick);
+    dateSpan.addEventListener('click', onDateClick);
   }
 
   // 绑定按钮事件
   const plusButton = timeAndButtonContainer.querySelector(`.ihm-timeSlider-plus-svg`);
   if (plusButton) {
-    plusButton.addEventListener("click", onZoomInClick);
+    plusButton.addEventListener('click', onZoomInClick);
   }
 
   const prevButton = timeAndButtonContainer.querySelector(`.ihm-timeSlider-prev-svg`);
   if (prevButton) {
-    prevButton.addEventListener("click", onPrevDayClick);
+    prevButton.addEventListener('click', onPrevDayClick);
   }
 
   const nextButton = timeAndButtonContainer.querySelector(`.ihm-timeSlider-next-svg`);
   if (nextButton) {
-    nextButton.addEventListener("click", onNextDayClick);
+    nextButton.addEventListener('click', onNextDayClick);
   }
 
   const minusButton = timeAndButtonContainer.querySelector(`.ihm-timeSlider-minus-svg`);
   if (minusButton) {
-    minusButton.addEventListener("click", onZoomOutClick);
+    minusButton.addEventListener('click', onZoomOutClick);
   }
 
   // 外部容器
-  const dragContainer = createElement("div", `${flag}-ihm-timeSlider-topbarContainer-dragContainer`, {
-    position: "relative",
-    overflow: "hidden", // 隐藏超出的内容
-    flexGrow: 1,
-    height: "100%",
-  });
+  const dragContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-topbarContainer-dragContainer`,
+    {
+      position: 'relative',
+      overflow: 'hidden', // 隐藏超出的内容
+      flexGrow: 1,
+      height: '100%',
+    }
+  );
 
-  const timelineContainer = createElement("div", `${flag}-ihm-timeSlider-topbarContainer-scaleAxis`, {
-    position: "absolute",
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    left: "0",
-    top: "0",
-  });
+  const timelineContainer = createElement(
+    'div',
+    `${flag}-ihm-timeSlider-topbarContainer-scaleAxis`,
+    {
+      position: 'absolute',
+      display: 'flex',
+      alignItems: 'center',
+      height: '100%',
+      left: '0',
+      top: '0',
+    }
+  );
 
   // 创建刻度
   const scaleArr = createScale(scaleTime, scaleSeconds);
@@ -111,36 +123,40 @@ export function createTopBar(config) {
       x = scaleWidth;
     }
 
-    const scaleBlock = createElement("div", `${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock`, {
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      // 如果是最后一个宽度为1
-      width: i === scaleTime ? "1px" : `${x}px`,
-      height: "100%",
-      backgroundColor: _styles[theme].headerBackgroundColor,
-      color: _styles[theme].headerTextColor,
-      fontSize: customStyle(styles.headerFontSize, "11px"),
-    });
+    const scaleBlock = createElement(
+      'div',
+      `${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock`,
+      {
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        // 如果是最后一个宽度为1
+        width: i === scaleTime ? '1px' : `${x}px`,
+        height: '100%',
+        backgroundColor: _styles[theme].headerBackgroundColor,
+        color: _styles[theme].headerTextColor,
+        fontSize: customStyle(styles.headerFontSize, '11px'),
+      }
+    );
 
     // 根据条件设置 margin-left
     const marginLeft =
       i === 0
-        ? customStyle(styles.headerFirstTextMargin, "0px")
+        ? customStyle(styles.headerFirstTextMargin, '0px')
         : i === scaleTime
-        ? customStyle(styles.headerLastTextMargin, "-30px")
-        : customStyle(styles.headerNormalTextMargin, "-15px");
+          ? customStyle(styles.headerLastTextMargin, '-30px')
+          : customStyle(styles.headerNormalTextMargin, '-15px');
 
     scaleBlock.innerHTML = `
       <span class="${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-span" style="user-select: none; margin-left: ${marginLeft};">${scaleArr[
-      i
-    ].slice(0, 5)}</span>
+        i
+      ].slice(0, 5)}</span>
       <div class="${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-axis" style="width: ${customStyle(
-      styles.headerFontSize,
-      "1px"
-    )}; height: ${customStyle(styles.headerFontSize, "4px")}; background-color: ${
-      _styles[theme].headerAxisColor
-    }; position: absolute; left: 0; bottom: 0;"></div>
+        styles.headerFontSize,
+        '1px'
+      )}; height: ${customStyle(styles.headerFontSize, '4px')}; background-color: ${
+        _styles[theme].headerAxisColor
+      }; position: absolute; left: 0; bottom: 0;"></div>
     `;
 
     timelineContainer.appendChild(scaleBlock);
@@ -154,7 +170,11 @@ export function createTopBar(config) {
   timelineContainer.appendChild(timeIndicatorText);
 
   // 绑定拖拽事件
-  bindDragEvents(dragContainer, timelineContainer, `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`);
+  bindDragEvents(
+    dragContainer,
+    timelineContainer,
+    `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`
+  );
 
   return {
     topbarContainer,

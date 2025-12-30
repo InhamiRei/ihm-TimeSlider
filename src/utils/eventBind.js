@@ -1,4 +1,4 @@
-import { calculateTimeFromPosition } from "./auxiliary.js";
+import { calculateTimeFromPosition } from './auxiliary.js';
 
 /**
  * 绑定拖拽事件
@@ -44,7 +44,7 @@ export const bindDragEvents = (dragContainer, timelineContainer, trackSelectorCl
 
   // 滚轮事件
   dragContainer.addEventListener(
-    "wheel",
+    'wheel',
     (e) => {
       // 向上滚动：减小位置（时间轴向左移）
       // 向下滚动：增加位置（时间轴向右移）
@@ -64,14 +64,14 @@ export const bindDragEvents = (dragContainer, timelineContainer, trackSelectorCl
     { passive: true }
   );
 
-  dragContainer.addEventListener("mousedown", (e) => {
+  dragContainer.addEventListener('mousedown', (e) => {
     isDragging = true;
     startX = e.clientX;
     lastDeltaX = 0;
-    dragContainer.style.cursor = "grabbing";
+    dragContainer.style.cursor = 'grabbing';
   });
 
-  document.addEventListener("mousemove", (e) => {
+  document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
 
     const deltaX = e.clientX - startX;
@@ -89,12 +89,12 @@ export const bindDragEvents = (dragContainer, timelineContainer, trackSelectorCl
     syncSliderPositions();
   });
 
-  document.addEventListener("mouseup", () => {
+  document.addEventListener('mouseup', () => {
     if (!isDragging) return;
 
     isDragging = false;
     requestAnimationFrame(updatePosition); // 开始惯性滑动
-    dragContainer.style.cursor = "default";
+    dragContainer.style.cursor = 'default';
   });
 };
 
@@ -108,8 +108,16 @@ export const bindDragEvents = (dragContainer, timelineContainer, trackSelectorCl
  * @param {number} scaleSeconds - 刻度秒间隔
  * @param {Object} styles - 自定义样式
  */
-export const bindHoverEvents = (sliderContainer, timeIndicatorLine, timeIndicatorText, timelineContainer, scaleWidth, scaleSeconds, styles) => {
-  sliderContainer.addEventListener("mousemove", (event) => {
+export const bindHoverEvents = (
+  sliderContainer,
+  timeIndicatorLine,
+  timeIndicatorText,
+  timelineContainer,
+  scaleWidth,
+  scaleSeconds,
+  styles
+) => {
+  sliderContainer.addEventListener('mousemove', (event) => {
     const container_left = sliderContainer.getBoundingClientRect().left;
     const click_left = event.clientX;
     const line_left = click_left - container_left;
@@ -124,9 +132,9 @@ export const bindHoverEvents = (sliderContainer, timeIndicatorLine, timeIndicato
     updateTimeDisplay(timeIndicatorText, time, line_left, timelineContainer);
   });
 
-  sliderContainer.addEventListener("mouseleave", () => {
-    timeIndicatorLine.style.left = "-9999px"; // 隐藏时间指示线
-    timeIndicatorText.style.left = "-9999px"; // 隐藏时间显示
+  sliderContainer.addEventListener('mouseleave', () => {
+    timeIndicatorLine.style.left = '-9999px'; // 隐藏时间指示线
+    timeIndicatorText.style.left = '-9999px'; // 隐藏时间显示
   });
 };
 

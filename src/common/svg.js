@@ -1,5 +1,5 @@
-import { _styles } from "./variable.js";
-import { customStyle } from "../utils/common.js";
+import { _styles } from './variable.js';
+import { customStyle } from '../utils/common.js';
 
 // 放大刻度轴的图标
 export const plusSVG = (flag, styles = {}, theme) => `
@@ -12,14 +12,14 @@ export const plusSVG = (flag, styles = {}, theme) => `
     class="ihm-timeSlider-plus-svg"
     data-icon="${flag}-plus"
     style="cursor: pointer;"
-    width="${customStyle(styles.iconWidth, "16px")}"
-    height="${customStyle(styles.iconWidth, "16px")}"
+    width="${customStyle(styles.iconWidth, '16px')}"
+    height="${customStyle(styles.iconWidth, '16px')}"
   >
     <title>放大刻度轴</title>
-    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}" rx="100" ry="100" />
+    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, '#ffffff')}" rx="100" ry="100" />
     <path
       d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
-      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      fill="${customStyle(_styles[theme].iconBorderColor, '#ffffff')}"
       p-id="3466"
     ></path>
     <path
@@ -47,8 +47,8 @@ export const prevDaySVG = (flag, styles = {}, theme) => `
     class="ihm-timeSlider-prev-svg"
     data-icon="${flag}-prevDay"
     style="cursor: pointer;"
-    width="${customStyle(styles.iconWidth, "16px")}"
-    height="${customStyle(styles.iconWidth, "16px")}"
+    width="${customStyle(styles.iconWidth, '16px')}"
+    height="${customStyle(styles.iconWidth, '16px')}"
   >
     <title>前一天</title>
     <rect
@@ -58,12 +58,12 @@ export const prevDaySVG = (flag, styles = {}, theme) => `
       height="945.23077"
       rx="20"
       ry="20"
-      fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}"
+      fill="${customStyle(_styles[theme].iconFillRectColor, '#ffffff')}"
       p-id="15075"
     ></rect>
     <path
       d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
-      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      fill="${customStyle(_styles[theme].iconBorderColor, '#ffffff')}"
       p-id="3466"
     ></path>
     <path
@@ -86,8 +86,8 @@ export const nextDaySVG = (flag, styles = {}, theme) => `
     class="ihm-timeSlider-next-svg"
     data-icon="${flag}-nextDay"
     style="cursor: pointer;"
-    width="${customStyle(styles.iconWidth, "16px")}"
-    height="${customStyle(styles.iconWidth, "16px")}"
+    width="${customStyle(styles.iconWidth, '16px')}"
+    height="${customStyle(styles.iconWidth, '16px')}"
   >
     <title>后一天</title>
     <rect
@@ -97,13 +97,13 @@ export const nextDaySVG = (flag, styles = {}, theme) => `
       height="945.23077"
       rx="20"
       ry="20"
-      fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}"
+      fill="${customStyle(_styles[theme].iconFillRectColor, '#ffffff')}"
       p-id="15075"
     ></rect>
     <g transform="rotate(180 512 512)">
       <path
         d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
-        fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+        fill="${customStyle(_styles[theme].iconBorderColor, '#ffffff')}"
         p-id="3466"
       ></path>
       <path
@@ -127,14 +127,14 @@ export const minusSVG = (flag, styles = {}, theme) => `
     class="ihm-timeSlider-minus-svg"
     data-icon="${flag}-minus"
     style="cursor: pointer;"
-    width="${customStyle(styles.iconWidth, "16px")}"
-    height="${customStyle(styles.iconWidth, "16px")}"
+    width="${customStyle(styles.iconWidth, '16px')}"
+    height="${customStyle(styles.iconWidth, '16px')}"
   >
     <title>缩小刻度轴</title>
-    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, "#ffffff")}" rx="100" ry="100" />
+    <rect width="100%" height="100%" fill="${customStyle(_styles[theme].iconFillRectColor, '#ffffff')}" rx="100" ry="100" />
     <path
       d="M896 0h-768C57.5488 0 0 57.5488 0 128v768C0 966.4512 57.5488 1024 128 1024h768c70.4512 0 128-57.5488 128-128v-768C1024 57.5488 966.4512 0 896 0z m64.1024 896c-0.2048 35.2256-28.672 63.8976-63.8976 63.8976h-768c-35.2256-0.2048-63.8976-28.672-63.8976-63.8976v-768c0-35.2256 28.8768-63.8976 63.8976-63.8976h768c35.2256 0 63.8976 28.8768 63.8976 63.8976v768z"
-      fill="${customStyle(_styles[theme].iconBorderColor, "#ffffff")}"
+      fill="${customStyle(_styles[theme].iconBorderColor, '#ffffff')}"
       p-id="3466"
     ></path>
     <path
@@ -156,9 +156,9 @@ export const downloadSVG = (flag, styles = {}, theme) => `
     p-id="1666"
     id="mx_n_1737444583316"
     data-icon="${flag}-minus"
-    width="${customStyle(styles.iconWidth, "18px")}"
-    height="${customStyle(styles.iconWidth, "18px")}"
-    color="${customStyle(_styles[theme].iconColor, "#ffffff")}"
+    width="${customStyle(styles.iconWidth, '18px')}"
+    height="${customStyle(styles.iconWidth, '18px')}"
+    color="${customStyle(_styles[theme].iconColor, '#ffffff')}"
   >
     <title>下载</title>
     <path
@@ -176,11 +176,11 @@ export const downloadSVG = (flag, styles = {}, theme) => `
 
 // 空状态图标
 export const emptySVG = (flag, styles = {}, theme) => {
-  if (theme === "light-theme") {
+  if (theme === 'light-theme') {
     return `
       <svg
-        width="${customStyle(styles.emptySize, "80px")}"
-        height="${customStyle(styles.emptySize, "80px")}"
+        width="${customStyle(styles.emptySize, '80px')}"
+        height="${customStyle(styles.emptySize, '80px')}"
         viewBox="0 0 136 132"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
@@ -266,8 +266,8 @@ export const emptySVG = (flag, styles = {}, theme) => {
   } else {
     return `
       <svg
-        width="${customStyle(styles.emptySize, "80px")}"
-        height="${customStyle(styles.emptySize, "80px")}"
+        width="${customStyle(styles.emptySize, '80px')}"
+        height="${customStyle(styles.emptySize, '80px')}"
         viewBox="0 0 136 132"
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"

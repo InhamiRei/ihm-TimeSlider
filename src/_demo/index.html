@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -66,7 +66,9 @@
       <button onclick="seekToTimeWithTrack('12:00')">定位到12:00</button>
       <button onclick="seekToTimeWithTrack('18:30')">定位到18:30</button>
       <input type="text" id="customTime" placeholder="输入时间(HH:MM:SS)" />
-      <button onclick="seekToTimeWithTrack(document.getElementById('customTime').value)">自定义定位</button>
+      <button onclick="seekToTimeWithTrack(document.getElementById('customTime').value)">
+        自定义定位
+      </button>
     </div>
     <script type="module" src="./index.js"></script>
   </body>

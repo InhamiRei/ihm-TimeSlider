@@ -1,5 +1,5 @@
-const path = require("path");
-const fs = require("fs");
+const path = require('path');
+const fs = require('fs');
 
 class MoveFilePlugin {
   constructor(version, timestamp) {
@@ -8,13 +8,13 @@ class MoveFilePlugin {
   }
 
   apply(compiler) {
-    compiler.hooks.afterEmit.tap("MoveFilePlugin", (compilation) => {
+    compiler.hooks.afterEmit.tap('MoveFilePlugin', (compilation) => {
       const versionFile = `argesTimeLine-v${this.version}-${this.timestamp}.js`;
-      const srcPath = path.join(process.cwd(), "dist", versionFile);
-      const destPath = path.join(process.cwd(), "version", versionFile);
+      const srcPath = path.join(process.cwd(), 'dist', versionFile);
+      const destPath = path.join(process.cwd(), 'version', versionFile);
 
-      if (!fs.existsSync(path.join(process.cwd(), "version"))) {
-        fs.mkdirSync(path.join(process.cwd(), "version"));
+      if (!fs.existsSync(path.join(process.cwd(), 'version'))) {
+        fs.mkdirSync(path.join(process.cwd(), 'version'));
       }
 
       if (fs.existsSync(srcPath)) {

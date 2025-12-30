@@ -1,5 +1,5 @@
-import { calculateTimeFromPosition, parseTimeToSeconds } from "./auxiliary.js";
-import { generateTimeObj } from "./common.js";
+import { calculateTimeFromPosition, parseTimeToSeconds } from './auxiliary.js';
+import { generateTimeObj } from './common.js';
 
 /**
  * 启动刻度线移动
@@ -10,7 +10,14 @@ import { generateTimeObj } from "./common.js";
  * @param {number} scaleSeconds - 刻度秒间隔
  * @param {number} playbackSpeed - 播放倍速，默认为1
  */
-export const startMarkerMovement = (markerLine, critical, criticalTime, scaleWidth, scaleSeconds, playbackSpeed = 1) => {
+export const startMarkerMovement = (
+  markerLine,
+  critical,
+  criticalTime,
+  scaleWidth,
+  scaleSeconds,
+  playbackSpeed = 1
+) => {
   // 清除已有的动画帧，防止重复启动
   if (markerLine.animationFrameId) {
     cancelAnimationFrame(markerLine.animationFrameId);

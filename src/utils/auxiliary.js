@@ -10,7 +10,7 @@
  * parseTimeToSeconds("02:30:30"); // 返回 9030
  */
 export const parseTimeToSeconds = (timeStr) => {
-  const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+  const [hours, minutes, seconds] = timeStr.split(':').map(Number);
   return hours * 3600 + minutes * 60 + seconds;
 };
 
@@ -30,7 +30,7 @@ export const formatSecondsToTime = (seconds) => {
   const minutes = Math.floor((seconds % 3600) / 60); // 计算剩余的分钟数
   const remainingSeconds = seconds % 60; // 计算剩余的秒数
 
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
 };
 
 /**
@@ -75,7 +75,7 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleSeconds) =
   const seconds = Math.floor(totalSeconds % 60); // 计算剩余秒数
 
   // 返回格式化时间
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
 /**
@@ -94,23 +94,27 @@ export const calculateTimeFromPosition = (blockLeft, scaleWidth, scaleSeconds) =
  */
 export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
   // 输入验证
-  if (!time || typeof time !== "string") {
-    console.warn("calculatePositionFromTime: Invalid time parameter:", time);
+  if (!time || typeof time !== 'string') {
+    console.warn('calculatePositionFromTime: Invalid time parameter:', time);
     return 0;
   }
 
   if (!scaleWidth || !scaleSeconds || scaleWidth <= 0 || scaleSeconds <= 0) {
-    console.warn("calculatePositionFromTime: Invalid scaleWidth or scaleSeconds:", scaleWidth, scaleSeconds);
+    console.warn(
+      'calculatePositionFromTime: Invalid scaleWidth or scaleSeconds:',
+      scaleWidth,
+      scaleSeconds
+    );
     return 0;
   }
 
   try {
     // 将时间字符串 (hh:mm:ss) 转换为总秒数
-    const [hours, minutes, seconds] = time.split(":").map(Number);
+    const [hours, minutes, seconds] = time.split(':').map(Number);
 
     // 验证解析结果
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
-      console.warn("calculatePositionFromTime: Invalid time format:", time);
+      console.warn('calculatePositionFromTime: Invalid time format:', time);
       return 0;
     }
 
@@ -118,7 +122,7 @@ export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
 
     // 检查时间是否在合理范围内 (0-86400秒，即一天)
     if (totalSeconds < 0 || totalSeconds > 86400) {
-      console.warn("calculatePositionFromTime: Time out of range (0-24h):", time, totalSeconds);
+      console.warn('calculatePositionFromTime: Time out of range (0-24h):', time, totalSeconds);
       return Math.max(0, Math.min((totalSeconds * scaleWidth) / scaleSeconds, 24 * scaleWidth));
     }
 
@@ -127,7 +131,7 @@ export const calculatePositionFromTime = (time, scaleWidth, scaleSeconds) => {
 
     return Math.max(0, blockLeft); // 确保不返回负值
   } catch (error) {
-    console.error("calculatePositionFromTime error:", error, "time:", time);
+    console.error('calculatePositionFromTime error:', error, 'time:', time);
     return 0;
   }
 };
@@ -150,8 +154,9 @@ export const findNextRecording = (recordings, targetSeconds, currentDateStr) => 
 
   // 寻找目标时间右边第一个录像段
   for (const recording of recordings) {
-    const startTime = new Date(`${currentDateStr} ${recording.startTime.split(" ")[1]}`);
-    const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+    const startTime = new Date(`${currentDateStr} ${recording.startTime.split(' ')[1]}`);
+    const startSeconds =
+      startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
 
     // 如果录像段的开始时间大于目标时间，这就是我们要找的下一个录像段
     if (startSeconds > targetSeconds) {
@@ -159,8 +164,13 @@ export const findNextRecording = (recordings, targetSeconds, currentDateStr) => 
         nextRecording = recording;
       } else {
         // 如果已经找到一个，比较哪个更近
-        const nextStartTime = new Date(`${currentDateStr} ${nextRecording.startTime.split(" ")[1]}`);
-        const nextStartSeconds = nextStartTime.getHours() * 3600 + nextStartTime.getMinutes() * 60 + nextStartTime.getSeconds();
+        const nextStartTime = new Date(
+          `${currentDateStr} ${nextRecording.startTime.split(' ')[1]}`
+        );
+        const nextStartSeconds =
+          nextStartTime.getHours() * 3600 +
+          nextStartTime.getMinutes() * 60 +
+          nextStartTime.getSeconds();
 
         if (startSeconds < nextStartSeconds) {
           nextRecording = recording;

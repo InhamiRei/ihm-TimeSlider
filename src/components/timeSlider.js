@@ -1,10 +1,14 @@
-import { _styles } from "../common/variable.js";
-import { createElement, isDom, adjustDate } from "../utils/common.js";
-import { calculateTimeFromPosition, calculatePositionFromTime, findNextRecording } from "../utils/auxiliary.js";
-import { emptySVG } from "../common/svg.js";
-import { createTopBar } from "./TimeTopBar.js";
-import { createTracks } from "./TimeTrack.js";
-import { startMarkerMovement, stopMarkLine, resumeMarkLine } from "../utils/markLine.js";
+import { _styles } from '../common/variable.js';
+import { createElement, isDom, adjustDate } from '../utils/common.js';
+import {
+  calculateTimeFromPosition,
+  calculatePositionFromTime,
+  findNextRecording,
+} from '../utils/auxiliary.js';
+import { emptySVG } from '../common/svg.js';
+import { createTopBar } from './TimeTopBar.js';
+import { createTracks } from './TimeTrack.js';
+import { startMarkerMovement, stopMarkLine, resumeMarkLine } from '../utils/markLine.js';
 
 export default class ihm_TimeSlider {
   constructor(config) {
@@ -19,14 +23,14 @@ export default class ihm_TimeSlider {
     }
 
     // 主题
-    this.theme = config.theme || "light-theme";
+    this.theme = config.theme || 'light-theme';
     // 一些有关宽度的样式
     this.styles = config.styles || {};
-    this.version = "v202501151711_IHM_TIMESLIDER";
-    this.flag = config.flag || "__4f8fbfb";
+    this.version = 'v202501151711_IHM_TIMESLIDER';
+    this.flag = config.flag || '__4f8fbfb';
 
     this.container = config.container;
-    this.date = new Date(config.curDay || new Date().toISOString().split("T")[0]); // 当前显示的日期
+    this.date = new Date(config.curDay || new Date().toISOString().split('T')[0]); // 当前显示的日期
     this.data = config.data; // 录像数据
     this.showDownloadBtn = config.showDownloadBtn !== undefined ? config.showDownloadBtn : true; // 是否显示下载按钮
     this.showMarkerLine = config.showMarkerLine !== undefined ? config.showMarkerLine : true; // 是否显示标记线，默认为true
@@ -72,20 +76,20 @@ export default class ihm_TimeSlider {
   // 主渲染方法
   render() {
     // 在渲染前，检查当前日期是否有保存的markerLine状态需要恢复
-    const currentDateStr = this.date.toISOString().split("T")[0];
+    const currentDateStr = this.date.toISOString().split('T')[0];
     if (!this.markerLineInfo || this.markerLineInfo.length === 0) {
       this.markerLineInfo = this._getMarkerLineStateForDate(currentDateStr) || [];
     }
 
     // 清空容器
-    this.container.innerHTML = "";
+    this.container.innerHTML = '';
 
     // 创建时间轴容器
-    const mainContainer = createElement("div", `${this.flag}-ihm-timeSlider-mainContainer`, {
-      position: "relative",
+    const mainContainer = createElement('div', `${this.flag}-ihm-timeSlider-mainContainer`, {
+      position: 'relative',
       paddingLeft: `${this.padding.left}px`,
       paddingRight: `${this.padding.right}px`,
-      userSelect: "none",
+      userSelect: 'none',
     });
 
     // 创建顶部栏
@@ -99,8 +103,8 @@ export default class ihm_TimeSlider {
       scaleSeconds: this.scaleSeconds,
       onPrevDayClick: () => this.prevDay(),
       onNextDayClick: () => this.nextDay(),
-      onZoomInClick: () => this.adjustTimeLine("in"),
-      onZoomOutClick: () => this.adjustTimeLine("out"),
+      onZoomInClick: () => this.adjustTimeLine('in'),
+      onZoomOutClick: () => this.adjustTimeLine('out'),
       onDateClick: () => this.showTimeSelector(),
     };
 
@@ -123,7 +127,9 @@ export default class ihm_TimeSlider {
       scaleWidth: this.scaleWidth,
       scaleSeconds: this.scaleSeconds,
       timeIndicatorText: this.timeIndicatorText,
-      timelineContainer: topbarContainer.querySelector(`.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`),
+      timelineContainer: topbarContainer.querySelector(
+        `.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`
+      ),
       markerLineInfo: this.markerLineInfo,
       onDownloadClick: this.onDownloadClick,
       onSegmentDblClick: this.onSegmentDblClick,
@@ -141,14 +147,14 @@ export default class ihm_TimeSlider {
 
     // 触发日期变更回调
     if (this.onDateChange) {
-      this.onDateChange(this.date.toISOString().split("T")[0]);
+      this.onDateChange(this.date.toISOString().split('T')[0]);
     }
   }
 
   // 显示时间选择器
   showTimeSelector() {
-    const dateStr = this.date.toISOString().split("T")[0];
-    const newDateStr = prompt("请输入日期 (YYYY-MM-DD)", dateStr);
+    const dateStr = this.date.toISOString().split('T')[0];
+    const newDateStr = prompt('请输入日期 (YYYY-MM-DD)', dateStr);
     if (newDateStr && /^\d{4}-\d{2}-\d{2}$/.test(newDateStr)) {
       // 保存当前日期的markerLine状态
       this._saveCurrentMarkerLineState();
@@ -166,7 +172,7 @@ export default class ihm_TimeSlider {
    * 保存当前日期的markerLine状态
    */
   _saveCurrentMarkerLineState() {
-    const currentDateStr = this.date.toISOString().split("T")[0];
+    const currentDateStr = this.date.toISOString().split('T')[0];
 
     // 保存当前日期的markerLine状态
     this.markerLineStates[currentDateStr] = [];
@@ -222,10 +228,10 @@ export default class ihm_TimeSlider {
     // 保存当前日期的markerLine状态
     this._saveCurrentMarkerLineState();
 
-    this.date = adjustDate(this.date, "prev");
+    this.date = adjustDate(this.date, 'prev');
 
     // 获取新日期的markerLine状态
-    const newDateStr = this.date.toISOString().split("T")[0];
+    const newDateStr = this.date.toISOString().split('T')[0];
     this.markerLineInfo = this._getMarkerLineStateForDate(newDateStr) || [];
 
     this.render();
@@ -236,10 +242,10 @@ export default class ihm_TimeSlider {
     // 保存当前日期的markerLine状态
     this._saveCurrentMarkerLineState();
 
-    this.date = adjustDate(this.date, "next");
+    this.date = adjustDate(this.date, 'next');
 
     // 获取新日期的markerLine状态
-    const newDateStr = this.date.toISOString().split("T")[0];
+    const newDateStr = this.date.toISOString().split('T')[0];
     this.markerLineInfo = this._getMarkerLineStateForDate(newDateStr) || [];
 
     this.render();
@@ -274,12 +280,12 @@ export default class ihm_TimeSlider {
       }
     }
 
-    if (direction === "in" && currentIndex < scales.length - 1) {
+    if (direction === 'in' && currentIndex < scales.length - 1) {
       // 放大：切换到下一个更大的刻度
       this.scaleTime = scales[currentIndex + 1];
       this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
       this.render();
-    } else if (direction === "out" && currentIndex > 0) {
+    } else if (direction === 'out' && currentIndex > 0) {
       // 缩小：切换到上一个更小的刻度
       this.scaleTime = scales[currentIndex - 1];
       this.scaleSeconds = this.scaleMap[this.scaleTime]; // 获取新的刻度秒数
@@ -294,7 +300,7 @@ export default class ihm_TimeSlider {
 
   // 修改模式: 亮色模式 / 暗色模式
   setTheme(theme) {
-    if (theme !== "light-theme" && theme !== "dark-theme") return;
+    if (theme !== 'light-theme' && theme !== 'dark-theme') return;
 
     // 保存当前markerLine状态
     this._saveCurrentMarkerLineState();
@@ -364,7 +370,7 @@ export default class ihm_TimeSlider {
   // 获取时间轴的信息
   getInfo() {
     const info = {
-      date: this.date.toISOString().split("T")[0], // 当前显示的日期
+      date: this.date.toISOString().split('T')[0], // 当前显示的日期
       tracks: [],
       scaleTime: this.scaleTime,
       scaleSeconds: this.scaleSeconds,
@@ -387,7 +393,11 @@ export default class ihm_TimeSlider {
       // 获取刻度线信息
       if (track.markerLine) {
         const markerLeft = parseFloat(track.markerLine.style.left) || 0;
-        const currentTime = calculateTimeFromPosition(markerLeft, this.scaleWidth, this.scaleSeconds);
+        const currentTime = calculateTimeFromPosition(
+          markerLeft,
+          this.scaleWidth,
+          this.scaleSeconds
+        );
 
         trackInfo.marker = {
           position: markerLeft,
@@ -408,8 +418,8 @@ export default class ihm_TimeSlider {
    * @param {number} trackIndex - 轨道索引，不传则设置所有轨道
    */
   setPlaybackSpeed(speed, trackIndex) {
-    if (typeof speed !== "number" || speed <= 0) {
-      console.warn("播放倍速必须是大于0的数字");
+    if (typeof speed !== 'number' || speed <= 0) {
+      console.warn('播放倍速必须是大于0的数字');
       return;
     }
 
@@ -453,7 +463,14 @@ export default class ihm_TimeSlider {
       const critical = (criticalTime * this.scaleWidth) / this.scaleSeconds;
 
       // 重新启动移动，使用新的倍速
-      startMarkerMovement(markerLine, critical, criticalTime, this.scaleWidth, this.scaleSeconds, speed);
+      startMarkerMovement(
+        markerLine,
+        critical,
+        criticalTime,
+        this.scaleWidth,
+        this.scaleSeconds,
+        speed
+      );
 
       // 同时更新markerLineInfo，确保状态一致性
       this._handleMarkerLineUpdate(trackIndex, {
@@ -493,7 +510,7 @@ export default class ihm_TimeSlider {
    * @param {boolean} isNewClick - 是否是新的双击操作（需要清空其他日期的状态）
    */
   _handleMarkerLineUpdate(trackIndex, info, isNewClick = false) {
-    const currentDateStr = this.date.toISOString().split("T")[0];
+    const currentDateStr = this.date.toISOString().split('T')[0];
 
     // 🔥 NEW: 如果是新的双击操作，清空该轨道在所有其他日期的状态
     if (isNewClick) {
@@ -550,7 +567,7 @@ export default class ihm_TimeSlider {
    * @param {number} trackIndex - 轨道索引，不传则定位所有轨道
    */
   seekToTime(targetTime, trackIndex) {
-    if (!targetTime || typeof targetTime !== "string") {
+    if (!targetTime || typeof targetTime !== 'string') {
       console.warn('目标时间格式错误，应为字符串格式 "HH:MM:SS" 或 "HH:MM"');
       return;
     }
@@ -564,10 +581,10 @@ export default class ihm_TimeSlider {
 
     const hours = parseInt(timeMatch[1], 10);
     const minutes = parseInt(timeMatch[2], 10);
-    const seconds = parseInt(timeMatch[3] || "0", 10);
+    const seconds = parseInt(timeMatch[3] || '0', 10);
 
     if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-      console.warn("时间值超出有效范围");
+      console.warn('时间值超出有效范围');
       return;
     }
 
@@ -578,7 +595,7 @@ export default class ihm_TimeSlider {
       return;
     }
 
-    const currentDateStr = this.date.toISOString().split("T")[0];
+    const currentDateStr = this.date.toISOString().split('T')[0];
 
     // 定位指定轨道或所有轨道
     if (trackIndex !== undefined) {
@@ -633,11 +650,13 @@ export default class ihm_TimeSlider {
     let targetRecording = null;
 
     for (const recording of recordings) {
-      const startTime = new Date(`${currentDateStr} ${recording.startTime.split(" ")[1]}`);
-      const endTime = new Date(`${currentDateStr} ${recording.endTime.split(" ")[1]}`);
+      const startTime = new Date(`${currentDateStr} ${recording.startTime.split(' ')[1]}`);
+      const endTime = new Date(`${currentDateStr} ${recording.endTime.split(' ')[1]}`);
 
-      const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
-      const endSeconds = endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
+      const startSeconds =
+        startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+      const endSeconds =
+        endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
 
       // 如果目标时间在录像段内
       if (targetSeconds >= startSeconds && targetSeconds <= endSeconds) {
@@ -654,8 +673,9 @@ export default class ihm_TimeSlider {
 
       if (nextRecording) {
         // 定位到下一个录像段的左边（与双击行为一致）
-        const startTime = new Date(`${currentDateStr} ${nextRecording.startTime.split(" ")[1]}`);
-        const startSeconds = startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
+        const startTime = new Date(`${currentDateStr} ${nextRecording.startTime.split(' ')[1]}`);
+        const startSeconds =
+          startTime.getHours() * 3600 + startTime.getMinutes() * 60 + startTime.getSeconds();
         // 直接使用秒数计算位置
         targetPosition = (startSeconds * this.scaleWidth) / this.scaleSeconds;
         targetRecording = nextRecording;
@@ -671,7 +691,7 @@ export default class ihm_TimeSlider {
       markerLine.style.left = `${targetPosition}px`;
 
       // 让刻度线可见（移除隐藏状态）
-      markerLine.style.display = "block";
+      markerLine.style.display = 'block';
 
       // 调试信息（可选，生产环境可移除）
       // console.log(`轨道 ${trackIndex} 定位信息:`, {
@@ -686,8 +706,9 @@ export default class ihm_TimeSlider {
       // });
 
       // 计算录像段的结束位置作为临界点
-      const endTime = new Date(`${currentDateStr} ${targetRecording.endTime.split(" ")[1]}`);
-      const criticalSeconds = endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
+      const endTime = new Date(`${currentDateStr} ${targetRecording.endTime.split(' ')[1]}`);
+      const criticalSeconds =
+        endTime.getHours() * 3600 + endTime.getMinutes() * 60 + endTime.getSeconds();
       // 直接使用秒数计算位置
       const criticalPosition = (criticalSeconds * this.scaleWidth) / this.scaleSeconds;
 
@@ -699,7 +720,14 @@ export default class ihm_TimeSlider {
 
       // 重置暂停状态并启动移动
       markerLine.isPaused = false;
-      startMarkerMovement(markerLine, criticalPosition, criticalSeconds, this.scaleWidth, this.scaleSeconds, this.playbackSpeed);
+      startMarkerMovement(
+        markerLine,
+        criticalPosition,
+        criticalSeconds,
+        this.scaleWidth,
+        this.scaleSeconds,
+        this.playbackSpeed
+      );
 
       // 🔥 关键修复：立即更新全局markerLineInfo数组，确保状态在缩放/日期切换时能正确保存和恢复
       this._handleMarkerLineUpdate(
@@ -715,9 +743,9 @@ export default class ihm_TimeSlider {
       console.log(
         `轨道 ${trackIndex} 刻度线已定位到 ${Math.floor(targetSeconds / 3600)
           .toString()
-          .padStart(2, "0")}:${Math.floor((targetSeconds % 3600) / 60)
+          .padStart(2, '0')}:${Math.floor((targetSeconds % 3600) / 60)
           .toString()
-          .padStart(2, "0")}:${(targetSeconds % 60).toString().padStart(2, "0")}`
+          .padStart(2, '0')}:${(targetSeconds % 60).toString().padStart(2, '0')}`
       );
     } else {
       console.warn(`轨道 ${trackIndex} 无法找到合适的定位位置`);
@@ -759,9 +787,11 @@ export default class ihm_TimeSlider {
     }
 
     // 移除事件监听器
-    const downloadBtns = this.container.querySelectorAll(`.${this.flag}-ihm-timeSlider-download-btn`);
+    const downloadBtns = this.container.querySelectorAll(
+      `.${this.flag}-ihm-timeSlider-download-btn`
+    );
     downloadBtns.forEach((btn) => {
-      btn.removeEventListener("click", this.onDownloadClick);
+      btn.removeEventListener('click', this.onDownloadClick);
     });
 
     // 移除resize观察器
@@ -771,7 +801,7 @@ export default class ihm_TimeSlider {
     }
 
     // 清空容器
-    this.container.innerHTML = "";
+    this.container.innerHTML = '';
 
     // 清空引用
     this.tracksContainer = null;

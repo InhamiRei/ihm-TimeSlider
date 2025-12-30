@@ -1,5 +1,5 @@
-import { createElement } from "../utils/common.js";
-import { _styles } from "../common/variable.js";
+import { createElement } from '../utils/common.js';
+import { _styles } from '../common/variable.js';
 
 /**
  * 创建时间标记线
@@ -10,18 +10,22 @@ import { _styles } from "../common/variable.js";
  * @returns {HTMLElement} 创建的标记线元素
  */
 export function createTimeMarker(flag, styles, theme, isIndicator = false) {
-  const className = isIndicator ? `${flag}-ihm-timeSlider-timeMarker` : `${flag}-ihm-timeSlider-markerLine`;
+  const className = isIndicator
+    ? `${flag}-ihm-timeSlider-timeMarker`
+    : `${flag}-ihm-timeSlider-markerLine`;
   const color = isIndicator ? _styles[theme].markerLineHoverColor : _styles[theme].markerLineColor;
-  const width = isIndicator ? styles.markerLineHoverWidth || "1px" : styles.markerLineWidth || "1px";
+  const width = isIndicator
+    ? styles.markerLineHoverWidth || '1px'
+    : styles.markerLineWidth || '1px';
 
-  const markerLine = createElement("div", className, {
-    position: "absolute",
-    top: "0",
-    left: isIndicator ? "-9999px" : "0", // 指示器初始隐藏
+  const markerLine = createElement('div', className, {
+    position: 'absolute',
+    top: '0',
+    left: isIndicator ? '-9999px' : '0', // 指示器初始隐藏
     width: width,
-    height: "100%",
+    height: '100%',
     zIndex: 2025, // 确保在滑块上层
-    pointerEvents: "none", // 防止事件阻挡
+    pointerEvents: 'none', // 防止事件阻挡
     backgroundColor: color,
   });
 
@@ -35,11 +39,11 @@ export function createTimeMarker(flag, styles, theme, isIndicator = false) {
  * @returns {HTMLElement} 创建的时间显示元素
  */
 export function createTimeIndicatorText(flag, theme) {
-  return createElement("div", `${flag}-ihm-timeSlider-timeDisplay`, {
-    position: "absolute",
-    top: "0",
-    left: "-9999px", // 初始隐藏
+  return createElement('div', `${flag}-ihm-timeSlider-timeDisplay`, {
+    position: 'absolute',
+    top: '0',
+    left: '-9999px', // 初始隐藏
     color: _styles[theme].headerTimeMarkerColor,
-    fontSize: "10px",
+    fontSize: '10px',
   });
 }
