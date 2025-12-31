@@ -185,3 +185,37 @@ window.setPlaybackSpeedWithTrack = (speed) => {
     console.log(`第${trackIndex + 1}条轨道的播放倍速已设置为 ${speed}x`);
   }
 };
+
+// 根据参数添加overlay
+window.addOverlayWithParams = () => {
+  const trackIndex = parseInt(document.getElementById('overlayTrackSelector').value, 10);
+  const startTime = document.getElementById('overlayStartTime').value;
+  const endTime = document.getElementById('overlayEndTime').value;
+  const color = document.getElementById('overlayColor').value;
+  const clear = document.getElementById('overlayClear').checked;
+
+  const overlayId = timeline.addOverlay({
+    index: trackIndex,
+    startTime,
+    endTime,
+    color,
+    clear,
+  });
+  console.log(
+    `添加overlay成功，轨道${trackIndex + 1}，时间${startTime}-${endTime}，ID:`,
+    overlayId
+  );
+};
+
+// 清除指定轨道的overlay
+window.clearOverlayByTrack = () => {
+  const trackIndex = parseInt(document.getElementById('overlayTrackSelector').value, 10);
+  timeline.clearOverlay(trackIndex);
+  console.log(`清除轨道${trackIndex + 1}的所有overlay`);
+};
+
+// 清除所有overlay
+window.clearOverlays = () => {
+  timeline.clearOverlays();
+  console.log('清除所有overlay成功');
+};

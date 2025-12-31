@@ -4,6 +4,7 @@ import {
   calculateTimeFromPosition,
   calculatePositionFromTime,
   findNextRecording,
+  parseTimeToSeconds,
 } from '../utils/auxiliary.js';
 import { emptySVG } from '../common/svg.js';
 import { createTopBar } from './TimeTopBar.js';
@@ -68,6 +69,7 @@ export default class ihm_TimeSlider {
     this.markerLineStates = {}; // 存储不同日期下的markerLine状态
     this.trackGlobalStates = {}; // 🔥 NEW: 每条轨道的全局状态，记录每条轨道当前活跃在哪个日期
     this.playbackSpeed = 1; // 播放倍速，默认为1倍速
+    this.overlays = []; // 存储所有overlay数据
 
     this.render();
     this._addResizeListener();
@@ -140,6 +142,9 @@ export default class ihm_TimeSlider {
     };
 
     this.tracksContainer = createTracks(tracksConfig);
+
+    // 渲染所有overlay
+    this._renderOverlays();
 
     // 添加录像轨道
     mainContainer.appendChild(this.tracksContainer);
@@ -752,6 +757,267 @@ export default class ihm_TimeSlider {
     }
   }
 
+  /**
+   * 添加覆盖层
+   * @param {Object} options - 覆盖层配置
+   * @param {number} options.index - 轨道索引
+   * @param {string} options.startTime - 开始时间 (格式: "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS")
+   * @param {string} options.endTime - 结束时间 (格式: "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS")
+   * @param {string} [options.color='#00ff00'] - 背景颜色，默认绿色
+   * @param {number} [options.opacity=0.5] - 透明度，默认0.5
+   * @param {boolean} [options.clear=false] - 是否先清除该轨道已有的overlay，默认false
+   * @returns {string} overlay的唯一ID，用于后续移除
+   */
+  addOverlay(options) {
+    const { index, startTime, endTime, color = '#00ff00', opacity = 0.5, clear = false } = options;
+
+    if (index === undefined || index < 0) {
+      console.warn('addOverlay: 必须提供有效的轨道索引 index');
+      return null;
+    }
+
+    if (!startTime || !endTime) {
+      console.warn('addOverlay: 必须提供 startTime 和 endTime');
+      return null;
+    }
+
+    // 如果需要先清除该轨道的overlay
+    if (clear) {
+      this.clearOverlay(index);
+    }
+
+    // 解析时间，支持 "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS" 格式
+    const parseDateTime = (timeStr) => {
+      // 检查是否包含日期部分
+      if (/^\d{4}-\d{2}-\d{2}/.test(timeStr)) {
+        const [datePart, timePart] = timeStr.split(' ');
+        return { date: datePart, time: timePart || '00:00:00' };
+      }
+      // 只有时间部分，使用当前日期
+      return { date: null, time: timeStr };
+    };
+
+    const startParsed = parseDateTime(startTime);
+    const endParsed = parseDateTime(endTime);
+
+    // 生成唯一ID
+    const overlayId = `overlay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // 存储overlay数据
+    const overlayData = {
+      id: overlayId,
+      index,
+      startDate: startParsed.date,
+      startTime: startParsed.time,
+      endDate: endParsed.date,
+      endTime: endParsed.time,
+      color,
+      opacity,
+    };
+
+    this.overlays.push(overlayData);
+
+    // 立即渲染该overlay
+    this._renderSingleOverlay(overlayData);
+
+    return overlayId;
+  }
+
+  /**
+   * 移除指定的覆盖层
+   * @param {string} overlayId - overlay的唯一ID
+   */
+  removeOverlay(overlayId) {
+    const overlayIndex = this.overlays.findIndex((o) => o.id === overlayId);
+    if (overlayIndex === -1) {
+      console.warn('removeOverlay: 未找到指定的overlay');
+      return;
+    }
+
+    // 从数组中移除
+    this.overlays.splice(overlayIndex, 1);
+
+    // 从DOM中移除
+    if (this.tracksContainer) {
+      const overlayElement = this.tracksContainer.querySelector(`[data-overlay-id="${overlayId}"]`);
+      if (overlayElement) {
+        overlayElement.remove();
+      }
+    }
+  }
+
+  /**
+   * 清除指定轨道的所有覆盖层
+   * @param {number} trackIndex - 轨道索引
+   */
+  clearOverlay(trackIndex) {
+    if (trackIndex === undefined || trackIndex < 0) {
+      console.warn('clearOverlay: 必须提供有效的轨道索引');
+      return;
+    }
+
+    // 从数组中移除该轨道的所有overlay
+    this.overlays = this.overlays.filter((o) => o.index !== trackIndex);
+
+    // 从DOM中移除该轨道的所有overlay
+    if (this.tracksContainer) {
+      const track = this.tracksContainer.children[trackIndex];
+      if (track) {
+        const overlayElements = track.querySelectorAll(`.${this.flag}-ihm-timeSlider-overlay`);
+        overlayElements.forEach((el) => el.remove());
+      }
+    }
+  }
+
+  /**
+   * 清除所有覆盖层
+   */
+  clearOverlays() {
+    this.overlays = [];
+
+    // 从DOM中移除所有overlay
+    if (this.tracksContainer) {
+      const overlayElements = this.tracksContainer.querySelectorAll(
+        `.${this.flag}-ihm-timeSlider-overlay`
+      );
+      overlayElements.forEach((el) => el.remove());
+    }
+  }
+
+  /**
+   * 渲染所有overlay
+   * @private
+   */
+  _renderOverlays() {
+    if (!this.overlays || this.overlays.length === 0) return;
+
+    this.overlays.forEach((overlayData) => {
+      this._renderSingleOverlay(overlayData);
+    });
+  }
+
+  /**
+   * 渲染单个overlay
+   * @param {Object} overlayData - overlay数据
+   * @private
+   */
+  _renderSingleOverlay(overlayData) {
+    if (!this.tracksContainer) return;
+
+    const { id, index, startDate, startTime, endDate, endTime, color, opacity } = overlayData;
+    const currentDateStr = this.date.toISOString().split('T')[0];
+
+    // 获取对应轨道
+    const track = this.tracksContainer.children[index];
+    if (!track) {
+      console.warn(`_renderSingleOverlay: 轨道索引 ${index} 不存在`);
+      return;
+    }
+
+    // 获取轨道内的slider容器
+    const sliderContainer = track.querySelector(
+      `.${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider`
+    );
+    if (!sliderContainer) return;
+
+    // 移除已存在的同ID overlay
+    const existingOverlay = sliderContainer.querySelector(`[data-overlay-id="${id}"]`);
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
+
+    // 计算当前日期下overlay的显示范围
+    const overlayRange = this._calculateOverlayRange(
+      currentDateStr,
+      startDate,
+      startTime,
+      endDate,
+      endTime
+    );
+
+    if (!overlayRange) return; // 当前日期不在overlay范围内
+
+    const { startSeconds, endSeconds } = overlayRange;
+
+    // 计算位置和宽度
+    const leftPosition = (startSeconds * this.scaleWidth) / this.scaleSeconds;
+    const width = ((endSeconds - startSeconds) * this.scaleWidth) / this.scaleSeconds;
+
+    if (width <= 0) return;
+
+    // 创建overlay元素
+    const overlayElement = createElement('div', `${this.flag}-ihm-timeSlider-overlay`, {
+      position: 'absolute',
+      top: '0',
+      left: `${leftPosition}px`,
+      width: `${width}px`,
+      height: '100%',
+      backgroundColor: color,
+      opacity: opacity,
+      zIndex: 2020, // 比时间块高，但比markerLine低
+      pointerEvents: 'none', // 不阻挡事件
+    });
+
+    overlayElement.setAttribute('data-overlay-id', id);
+    sliderContainer.appendChild(overlayElement);
+  }
+
+  /**
+   * 计算overlay在当前日期的显示范围
+   * @param {string} currentDateStr - 当前日期字符串
+   * @param {string|null} startDate - 开始日期
+   * @param {string} startTime - 开始时间
+   * @param {string|null} endDate - 结束日期
+   * @param {string} endTime - 结束时间
+   * @returns {Object|null} - {startSeconds, endSeconds} 或 null
+   * @private
+   */
+  _calculateOverlayRange(currentDateStr, startDate, startTime, endDate, endTime) {
+    // 如果没有指定日期，则使用当前日期（只在当前日期显示）
+    const effectiveStartDate = startDate || currentDateStr;
+    const effectiveEndDate = endDate || currentDateStr;
+
+    // 如果没有指定日期，且当前日期不是时间轴显示的日期，则不显示
+    if (!startDate && !endDate) {
+      // 只有时间没有日期的情况，只在当前显示的日期显示一次
+      const startSeconds = parseTimeToSeconds(startTime);
+      const endSeconds = parseTimeToSeconds(endTime);
+      return { startSeconds, endSeconds };
+    }
+
+    // 将日期转换为时间戳进行比较
+    const currentDate = new Date(currentDateStr).getTime();
+    const overlayStartDate = new Date(effectiveStartDate).getTime();
+    const overlayEndDate = new Date(effectiveEndDate).getTime();
+
+    // 检查当前日期是否在overlay范围内
+    if (currentDate < overlayStartDate || currentDate > overlayEndDate) {
+      return null; // 当前日期不在范围内
+    }
+
+    let startSeconds, endSeconds;
+
+    // 计算开始秒数
+    if (currentDateStr === effectiveStartDate) {
+      // 当前日期是开始日期，使用指定的开始时间
+      startSeconds = parseTimeToSeconds(startTime);
+    } else {
+      // 当前日期在开始日期之后，从00:00:00开始
+      startSeconds = 0;
+    }
+
+    // 计算结束秒数
+    if (currentDateStr === effectiveEndDate) {
+      // 当前日期是结束日期，使用指定的结束时间
+      endSeconds = parseTimeToSeconds(endTime);
+    } else {
+      // 当前日期在结束日期之前，到24:00:00结束
+      endSeconds = 86400; // 24小时
+    }
+
+    return { startSeconds, endSeconds };
+  }
+
   // 监听窗口变化
   _addResizeListener() {
     this.resizeObserver = new ResizeObserver((entries) => {
@@ -809,5 +1075,6 @@ export default class ihm_TimeSlider {
     this.markerLineInfo = [];
     this.markerLineStates = {};
     this.trackGlobalStates = {}; // 清空轨道全局状态
+    this.overlays = []; // 清空overlay数据
   }
 }

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -69,6 +69,65 @@
       <button onclick="seekToTimeWithTrack(document.getElementById('customTime').value)">
         自定义定位
       </button>
+    </div>
+    <div class="operate">
+      <h4>Overlay覆盖层控制：</h4>
+      <select
+        id="overlayTrackSelector"
+        style="
+          height: 38px;
+          padding: 0 30px 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          appearance: none;
+          background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 12 8&quot;><path fill=&quot;%23666&quot; d=&quot;M6 8L0 2h12L6 8z&quot;/></svg>');
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          background-size: 10px;
+        "
+      >
+        <option value="0">第1条轨道</option>
+        <option value="1">第2条轨道</option>
+      </select>
+      <input
+        type="text"
+        id="overlayStartTime"
+        placeholder="开始时间(YYYY-MM-DD HH:MM:SS)"
+        value="2025-09-09 08:00:00"
+        style="
+          height: 34px;
+          padding: 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          width: 180px;
+        "
+      />
+      <input
+        type="text"
+        id="overlayEndTime"
+        placeholder="结束时间(YYYY-MM-DD HH:MM:SS)"
+        value="2025-09-09 12:00:00"
+        style="
+          height: 34px;
+          padding: 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          width: 180px;
+        "
+      />
+      <input
+        type="color"
+        id="overlayColor"
+        value="#00ff00"
+        style="height: 38px; width: 60px; border: 1px solid #ccc; border-radius: 4px"
+      />
+      <label style="display: inline-flex; align-items: center; margin: 0 8px; gap: 4px">
+        <input type="checkbox" id="overlayClear" style="width: auto" />
+        <span>清除已有</span>
+      </label>
+      <button onclick="addOverlayWithParams()">添加Overlay</button>
+      <button onclick="clearOverlayByTrack()">清除该轨道Overlay</button>
+      <button onclick="clearOverlays()">清除所有Overlay</button>
     </div>
     <script type="module" src="./index.js"></script>
   </body>
