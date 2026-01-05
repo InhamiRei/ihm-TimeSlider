@@ -4,8 +4,12 @@
   "useTabs": false,
   "semi": true,
   "singleQuote": true,
-  "trailingComma": "es5",
+  "trailingComma": "all",
   "bracketSpacing": true,
+  "bracketSameLine": false,
   "arrowParens": "always",
-  "endOfLine": "lf"
+  "htmlWhitespaceSensitivity": "css",
+  "endOfLine": "lf",
+  "singleAttributePerLine": true,
+  "proseWrap": "preserve"
 }

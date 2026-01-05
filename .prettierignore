@@ -2,7 +2,6 @@
 build
 coverage
 node_modules
-*.md
 dist
 package-lock.json
 public
