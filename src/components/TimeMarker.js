@@ -24,7 +24,7 @@ export function createTimeMarker(flag, styles, theme, isIndicator = false) {
     left: isIndicator ? '-9999px' : '0', // 指示器初始隐藏
     width: width,
     height: '100%',
-    zIndex: 2025, // 确保在滑块上层
+    zIndex: 10, // 比overlay高即可
     pointerEvents: 'none', // 防止事件阻挡
     backgroundColor: color,
   });

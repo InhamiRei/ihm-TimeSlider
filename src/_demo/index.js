@@ -200,10 +200,14 @@ window.addOverlayWithParams = () => {
     color,
     clear,
   });
-  console.log(
-    `添加overlay成功，轨道${trackIndex + 1}，时间${startTime}-${endTime}，ID:`,
-    overlayId,
-  );
+
+  if (overlayId) {
+    console.log(
+      `添加overlay成功，轨道${trackIndex + 1}，时间${startTime}-${endTime}，ID: ${overlayId}`,
+    );
+  } else {
+    console.error(`添加overlay失败，请检查参数格式`);
+  }
 };
 
 // 清除指定轨道的overlay
@@ -217,4 +221,15 @@ window.clearOverlayByTrack = () => {
 window.clearOverlays = () => {
   timeline.clearOverlays();
   console.log('清除所有overlay成功');
+};
+
+// 根据ID移除单个overlay
+window.removeOverlayById = () => {
+  const overlayId = document.getElementById('overlayIdToRemove').value.trim();
+  if (!overlayId) {
+    console.warn('请输入要移除的Overlay ID');
+    return;
+  }
+  timeline.removeOverlay(overlayId);
+  console.log(`已移除Overlay: ${overlayId}`);
 };

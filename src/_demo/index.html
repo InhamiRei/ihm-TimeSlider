@@ -2,12 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>ArgesTimeLine Demo</title>
-    <link rel="stylesheet" href="./index.css" />
+    <link
+      rel="stylesheet"
+      href="./index.css"
+    />
   </head>
   <body class="light-theme">
-    <div id="timeSlider" class="timeSlider"></div>
+    <div
+      id="timeSlider"
+      class="timeSlider"
+    ></div>
     <div class="operate">
       <h4>基础控制：</h4>
       <button onclick="getTimeLineInfo()">获取时间轴信息</button>
@@ -65,7 +74,11 @@
       <button onclick="seekToTimeWithTrack('00:10')">定位到00:10</button>
       <button onclick="seekToTimeWithTrack('12:00')">定位到12:00</button>
       <button onclick="seekToTimeWithTrack('18:30')">定位到18:30</button>
-      <input type="text" id="customTime" placeholder="输入时间(HH:MM:SS)" />
+      <input
+        type="text"
+        id="customTime"
+        placeholder="输入时间(HH:MM:SS)"
+      />
       <button onclick="seekToTimeWithTrack(document.getElementById('customTime').value)">
         自定义定位
       </button>
@@ -118,17 +131,43 @@
       <input
         type="color"
         id="overlayColor"
-        value="#00ff00"
+        value="#73D473"
         style="height: 38px; width: 60px; border: 1px solid #ccc; border-radius: 4px"
       />
       <label style="display: inline-flex; align-items: center; margin: 0 8px; gap: 4px">
-        <input type="checkbox" id="overlayClear" style="width: auto" />
+        <input
+          type="checkbox"
+          id="overlayClear"
+          style="width: auto"
+        />
         <span>清除已有</span>
       </label>
       <button onclick="addOverlayWithParams()">添加Overlay</button>
       <button onclick="clearOverlayByTrack()">清除该轨道Overlay</button>
       <button onclick="clearOverlays()">清除所有Overlay</button>
     </div>
-    <script type="module" src="./index.js"></script>
+    <div class="operate">
+      <h4>移除单个Overlay：</h4>
+      <input
+        type="text"
+        id="overlayIdToRemove"
+        placeholder="输入Overlay ID"
+        style="
+          height: 34px;
+          padding: 0 10px;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          width: 280px;
+        "
+      />
+      <button onclick="removeOverlayById()">移除该Overlay</button>
+      <span style="color: #666; font-size: 12px; margin-left: 8px">
+        (添加Overlay后会在控制台打印ID)
+      </span>
+    </div>
+    <script
+      type="module"
+      src="./index.js"
+    ></script>
   </body>
 </html>

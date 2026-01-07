@@ -1,36 +1,5 @@
 // 引入 Node.js 自带的 path 模块，用于解析文件和目录路径
 const path = require('path');
-const fs = require('fs');
-const MoveFilePlugin = require('./scripts/moveFilePlugin');
-
-// 获取最新版本号
-const getLatestVersion = () => {
-  const logsDir = path.join(__dirname, 'logs');
-  const versionFiles = fs
-    .readdirSync(logsDir)
-    .filter((file) => file.startsWith('v') && file.endsWith('.md'))
-    .sort()
-    .reverse();
-
-  if (versionFiles.length > 0) {
-    return versionFiles[0].replace('.md', '').substring(1);
-  }
-  return '1.0.0'; // 默认版本
-};
-
-// 获取格式化的时间戳 (YYYYMMDDHHmm)
-const getFormattedTimestamp = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  return `${year}${month}${day}${hours}${minutes}`;
-};
-
-const version = getLatestVersion();
-const timestamp = getFormattedTimestamp();
 
 // 自定义模块
 module.exports = {
@@ -93,5 +62,5 @@ module.exports = {
     ],
   },
   // 配置插件列表
-  plugins: [new MoveFilePlugin(version, timestamp)],
+  plugins: [],
 };

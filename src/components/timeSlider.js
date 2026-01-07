@@ -130,7 +130,7 @@ export default class ihm_TimeSlider {
       scaleSeconds: this.scaleSeconds,
       timeIndicatorText: this.timeIndicatorText,
       timelineContainer: topbarContainer.querySelector(
-        `.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`
+        `.${this.flag}-ihm-timeSlider-topbarContainer-scaleAxis`,
       ),
       markerLineInfo: this.markerLineInfo,
       onDownloadClick: this.onDownloadClick,
@@ -401,7 +401,7 @@ export default class ihm_TimeSlider {
         const currentTime = calculateTimeFromPosition(
           markerLeft,
           this.scaleWidth,
-          this.scaleSeconds
+          this.scaleSeconds,
         );
 
         trackInfo.marker = {
@@ -474,7 +474,7 @@ export default class ihm_TimeSlider {
         criticalTime,
         this.scaleWidth,
         this.scaleSeconds,
-        speed
+        speed,
       );
 
       // 同时更新markerLineInfo，确保状态一致性
@@ -731,7 +731,7 @@ export default class ihm_TimeSlider {
         criticalSeconds,
         this.scaleWidth,
         this.scaleSeconds,
-        this.playbackSpeed
+        this.playbackSpeed,
       );
 
       // 🔥 关键修复：立即更新全局markerLineInfo数组，确保状态在缩放/日期切换时能正确保存和恢复
@@ -742,7 +742,7 @@ export default class ihm_TimeSlider {
           criticalTime: criticalSeconds,
           isPaused: false,
         },
-        true
+        true,
       ); // seekToTime 也是新操作，清空该轨道在其他日期的状态
 
       console.log(
@@ -750,7 +750,7 @@ export default class ihm_TimeSlider {
           .toString()
           .padStart(2, '0')}:${Math.floor((targetSeconds % 3600) / 60)
           .toString()
-          .padStart(2, '0')}:${(targetSeconds % 60).toString().padStart(2, '0')}`
+          .padStart(2, '0')}:${(targetSeconds % 60).toString().padStart(2, '0')}`,
       );
     } else {
       console.warn(`轨道 ${trackIndex} 无法找到合适的定位位置`);
@@ -761,15 +761,24 @@ export default class ihm_TimeSlider {
    * 添加覆盖层
    * @param {Object} options - 覆盖层配置
    * @param {number} options.index - 轨道索引
-   * @param {string} options.startTime - 开始时间 (格式: "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS")
-   * @param {string} options.endTime - 结束时间 (格式: "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS")
-   * @param {string} [options.color='#00ff00'] - 背景颜色，默认绿色
-   * @param {number} [options.opacity=0.5] - 透明度，默认0.5
+   * @param {string} options.startTime - 开始时间 (格式: "YYYY-MM-DD HH:MM:SS")
+   * @param {string} options.endTime - 结束时间 (格式: "YYYY-MM-DD HH:MM:SS")
+   * @param {string} [options.color='#73D473'] - 背景颜色，默认绿色
+   * @param {number} [options.opacity=1] - 透明度，默认1
+   * @param {number} [options.zIndex=5] - 层级，默认5
    * @param {boolean} [options.clear=false] - 是否先清除该轨道已有的overlay，默认false
    * @returns {string} overlay的唯一ID，用于后续移除
    */
   addOverlay(options) {
-    const { index, startTime, endTime, color = '#00ff00', opacity = 0.5, clear = false } = options;
+    const {
+      index,
+      startTime,
+      endTime,
+      color = '#73D473',
+      opacity = 1,
+      zIndex = 5,
+      clear = false,
+    } = options;
 
     if (index === undefined || index < 0) {
       console.warn('addOverlay: 必须提供有效的轨道索引 index');
@@ -781,20 +790,34 @@ export default class ihm_TimeSlider {
       return null;
     }
 
+    // 验证时间格式必须为 "YYYY-MM-DD HH:MM:SS"
+    const dateTimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+    if (!dateTimeRegex.test(startTime)) {
+      console.warn('addOverlay: startTime 格式错误，必须为 "YYYY-MM-DD HH:MM:SS" 格式');
+      return null;
+    }
+    if (!dateTimeRegex.test(endTime)) {
+      console.warn('addOverlay: endTime 格式错误，必须为 "YYYY-MM-DD HH:MM:SS" 格式');
+      return null;
+    }
+
+    // 验证开始时间必须早于结束时间
+    const startDate = new Date(startTime.replace(' ', 'T'));
+    const endDate = new Date(endTime.replace(' ', 'T'));
+    if (startDate >= endDate) {
+      console.warn('addOverlay: startTime 必须早于 endTime');
+      return null;
+    }
+
     // 如果需要先清除该轨道的overlay
     if (clear) {
       this.clearOverlay(index);
     }
 
-    // 解析时间，支持 "YYYY-MM-DD HH:MM:SS" 或 "HH:MM:SS" 格式
+    // 解析时间
     const parseDateTime = (timeStr) => {
-      // 检查是否包含日期部分
-      if (/^\d{4}-\d{2}-\d{2}/.test(timeStr)) {
-        const [datePart, timePart] = timeStr.split(' ');
-        return { date: datePart, time: timePart || '00:00:00' };
-      }
-      // 只有时间部分，使用当前日期
-      return { date: null, time: timeStr };
+      const [datePart, timePart] = timeStr.split(' ');
+      return { date: datePart, time: timePart };
     };
 
     const startParsed = parseDateTime(startTime);
@@ -813,6 +836,7 @@ export default class ihm_TimeSlider {
       endTime: endParsed.time,
       color,
       opacity,
+      zIndex,
     };
 
     this.overlays.push(overlayData);
@@ -878,7 +902,7 @@ export default class ihm_TimeSlider {
     // 从DOM中移除所有overlay
     if (this.tracksContainer) {
       const overlayElements = this.tracksContainer.querySelectorAll(
-        `.${this.flag}-ihm-timeSlider-overlay`
+        `.${this.flag}-ihm-timeSlider-overlay`,
       );
       overlayElements.forEach((el) => el.remove());
     }
@@ -904,7 +928,8 @@ export default class ihm_TimeSlider {
   _renderSingleOverlay(overlayData) {
     if (!this.tracksContainer) return;
 
-    const { id, index, startDate, startTime, endDate, endTime, color, opacity } = overlayData;
+    const { id, index, startDate, startTime, endDate, endTime, color, opacity, zIndex } =
+      overlayData;
     const currentDateStr = this.date.toISOString().split('T')[0];
 
     // 获取对应轨道
@@ -916,7 +941,7 @@ export default class ihm_TimeSlider {
 
     // 获取轨道内的slider容器
     const sliderContainer = track.querySelector(
-      `.${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider`
+      `.${this.flag}-ihm-timeSlider-trackContainer-trackRow-slider`,
     );
     if (!sliderContainer) return;
 
@@ -932,7 +957,7 @@ export default class ihm_TimeSlider {
       startDate,
       startTime,
       endDate,
-      endTime
+      endTime,
     );
 
     if (!overlayRange) return; // 当前日期不在overlay范围内
@@ -954,7 +979,7 @@ export default class ihm_TimeSlider {
       height: '100%',
       backgroundColor: color,
       opacity: opacity,
-      zIndex: 2020, // 比时间块高，但比markerLine低
+      zIndex: zIndex,
       pointerEvents: 'none', // 不阻挡事件
     });
 
@@ -965,30 +990,18 @@ export default class ihm_TimeSlider {
   /**
    * 计算overlay在当前日期的显示范围
    * @param {string} currentDateStr - 当前日期字符串
-   * @param {string|null} startDate - 开始日期
+   * @param {string} startDate - 开始日期
    * @param {string} startTime - 开始时间
-   * @param {string|null} endDate - 结束日期
+   * @param {string} endDate - 结束日期
    * @param {string} endTime - 结束时间
    * @returns {Object|null} - {startSeconds, endSeconds} 或 null
    * @private
    */
   _calculateOverlayRange(currentDateStr, startDate, startTime, endDate, endTime) {
-    // 如果没有指定日期，则使用当前日期（只在当前日期显示）
-    const effectiveStartDate = startDate || currentDateStr;
-    const effectiveEndDate = endDate || currentDateStr;
-
-    // 如果没有指定日期，且当前日期不是时间轴显示的日期，则不显示
-    if (!startDate && !endDate) {
-      // 只有时间没有日期的情况，只在当前显示的日期显示一次
-      const startSeconds = parseTimeToSeconds(startTime);
-      const endSeconds = parseTimeToSeconds(endTime);
-      return { startSeconds, endSeconds };
-    }
-
     // 将日期转换为时间戳进行比较
     const currentDate = new Date(currentDateStr).getTime();
-    const overlayStartDate = new Date(effectiveStartDate).getTime();
-    const overlayEndDate = new Date(effectiveEndDate).getTime();
+    const overlayStartDate = new Date(startDate).getTime();
+    const overlayEndDate = new Date(endDate).getTime();
 
     // 检查当前日期是否在overlay范围内
     if (currentDate < overlayStartDate || currentDate > overlayEndDate) {
@@ -998,7 +1011,7 @@ export default class ihm_TimeSlider {
     let startSeconds, endSeconds;
 
     // 计算开始秒数
-    if (currentDateStr === effectiveStartDate) {
+    if (currentDateStr === startDate) {
       // 当前日期是开始日期，使用指定的开始时间
       startSeconds = parseTimeToSeconds(startTime);
     } else {
@@ -1007,7 +1020,7 @@ export default class ihm_TimeSlider {
     }
 
     // 计算结束秒数
-    if (currentDateStr === effectiveEndDate) {
+    if (currentDateStr === endDate) {
       // 当前日期是结束日期，使用指定的结束时间
       endSeconds = parseTimeToSeconds(endTime);
     } else {
@@ -1054,7 +1067,7 @@ export default class ihm_TimeSlider {
 
     // 移除事件监听器
     const downloadBtns = this.container.querySelectorAll(
-      `.${this.flag}-ihm-timeSlider-download-btn`
+      `.${this.flag}-ihm-timeSlider-download-btn`,
     );
     downloadBtns.forEach((btn) => {
       btn.removeEventListener('click', this.onDownloadClick);
