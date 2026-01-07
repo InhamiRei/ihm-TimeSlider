@@ -111,20 +111,19 @@ const config = {
 const timeline = new ihm_TimeSlider(config);
 
 // 切换亮色模式和深色模式
+// 注意：组件内部已完全处理主题切换，使用者只需调用 timeline.setTheme() 即可
+// 下面操作 body.classList 仅用于 demo 页面其他元素（按钮、输入框等）的样式切换
 window.changeTheme = (theme) => {
-  if (theme === 'light-theme') {
-    document.body.classList.remove('dark-theme');
-    document.body.classList.add('light-theme');
-    // 更新时间轴的主题
-    timeline.setTheme('light-theme');
-  } else if (theme === 'dark-theme') {
-    document.body.classList.remove('light-theme');
-    document.body.classList.add('dark-theme');
-    // 更新时间轴的主题
-    timeline.setTheme('dark-theme');
-  } else {
+  if (theme !== 'light-theme' && theme !== 'dark-theme') {
     return; // 不支持的主题，不做任何操作
   }
+
+  // 组件主题切换
+  timeline.setTheme(theme);
+
+  // 以下仅用于 demo 页面样式，实际使用时不需要
+  document.body.classList.remove('dark-theme', 'light-theme');
+  document.body.classList.add(theme);
 };
 
 // 刻度线的操作
@@ -203,7 +202,7 @@ window.addOverlayWithParams = () => {
   });
   console.log(
     `添加overlay成功，轨道${trackIndex + 1}，时间${startTime}-${endTime}，ID:`,
-    overlayId
+    overlayId,
   );
 };
 

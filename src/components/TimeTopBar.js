@@ -31,6 +31,7 @@ export function createTopBar(config) {
     border: `1px solid ${_styles[theme].borderColor}`,
     borderBottom: 'none',
     display: 'flex',
+    backgroundColor: _styles[theme].headerBackgroundColor,
   });
 
   // 左侧的时间和4个按钮
@@ -45,15 +46,15 @@ export function createTopBar(config) {
       alignItems: 'center',
       justifyContent: 'space-around',
       borderRight: `1px solid ${_styles[theme].borderColor}`,
-    }
+    },
   );
 
   timeAndButtonContainer.innerHTML = `
     ${plusSVG(flag, styles, theme)}
     ${prevDaySVG(flag, styles, theme)}
     <span class="${flag}-ihm-timeSlider-date" style="font-size: 14px; color: ${
-      _styles[theme].leftTextColor
-    }; cursor: initial;pointer-events: none;">${date.toISOString().split('T')[0]}</span>
+    _styles[theme].leftTextColor
+  }; cursor: initial;pointer-events: none;">${date.toISOString().split('T')[0]}</span>
     ${nextDaySVG(flag, styles, theme)}
     ${minusSVG(flag, styles, theme)}
   `;
@@ -95,7 +96,7 @@ export function createTopBar(config) {
       overflow: 'hidden', // 隐藏超出的内容
       flexGrow: 1,
       height: '100%',
-    }
+    },
   );
 
   const timelineContainer = createElement(
@@ -108,7 +109,7 @@ export function createTopBar(config) {
       height: '100%',
       left: '0',
       top: '0',
-    }
+    },
   );
 
   // 创建刻度
@@ -136,7 +137,7 @@ export function createTopBar(config) {
         backgroundColor: _styles[theme].headerBackgroundColor,
         color: _styles[theme].headerTextColor,
         fontSize: customStyle(styles.headerFontSize, '11px'),
-      }
+      },
     );
 
     // 根据条件设置 margin-left
@@ -144,19 +145,19 @@ export function createTopBar(config) {
       i === 0
         ? customStyle(styles.headerFirstTextMargin, '0px')
         : i === scaleTime
-          ? customStyle(styles.headerLastTextMargin, '-30px')
-          : customStyle(styles.headerNormalTextMargin, '-15px');
+        ? customStyle(styles.headerLastTextMargin, '-30px')
+        : customStyle(styles.headerNormalTextMargin, '-15px');
 
     scaleBlock.innerHTML = `
       <span class="${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-span" style="user-select: none; margin-left: ${marginLeft};">${scaleArr[
-        i
-      ].slice(0, 5)}</span>
+      i
+    ].slice(0, 5)}</span>
       <div class="${flag}-ihm-timeSlider-topbarContainer-scaleAxis-axisBlock-axis" style="width: ${customStyle(
-        styles.headerFontSize,
-        '1px'
-      )}; height: ${customStyle(styles.headerFontSize, '4px')}; background-color: ${
-        _styles[theme].headerAxisColor
-      }; position: absolute; left: 0; bottom: 0;"></div>
+      styles.headerFontSize,
+      '1px',
+    )}; height: ${customStyle(styles.headerFontSize, '4px')}; background-color: ${
+      _styles[theme].headerAxisColor
+    }; position: absolute; left: 0; bottom: 0;"></div>
     `;
 
     timelineContainer.appendChild(scaleBlock);
@@ -173,7 +174,7 @@ export function createTopBar(config) {
   bindDragEvents(
     dragContainer,
     timelineContainer,
-    `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`
+    `${flag}-ihm-timeSlider-trackContainer-trackRow-slider`,
   );
 
   return {

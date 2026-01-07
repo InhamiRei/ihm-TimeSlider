@@ -16,7 +16,7 @@ export const _styles = {
     // 左侧列的文本颜色
     leftTextColor: '#6f6f6f',
     // 头部的背景色
-    headerBackgroundColor: 'transparent',
+    headerBackgroundColor: '#ffffff',
     // 头部刻度线的文本颜色
     headerTextColor: '#6f6f6f',
     // 头部刻度线的刻度颜色
@@ -44,7 +44,7 @@ export const _styles = {
     // 左侧列的文本颜色
     leftTextColor: '#c7c7c7',
     // 头部的背景色
-    headerBackgroundColor: 'transparent',
+    headerBackgroundColor: '#3c3e4c',
     // 头部刻度线的文本颜色
     headerTextColor: '#c7c7c7',
     // 头部刻度线的刻度颜色
