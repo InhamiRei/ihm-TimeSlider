@@ -777,7 +777,7 @@ export default class ihm_TimeSlider {
       color = '#73D473',
       opacity = 1,
       zIndex = 5,
-      clear = false,
+      clear = true,
     } = options;
 
     if (index === undefined || index < 0) {
