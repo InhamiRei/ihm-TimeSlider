@@ -780,6 +780,11 @@ export default class ihm_TimeSlider {
       clear = true,
     } = options;
 
+    // 如果需要先清除该轨道的overlay，在验证之前就清除
+    if (clear) {
+      this.clearOverlay(index);
+    }
+
     if (index === undefined || index < 0) {
       console.warn('addOverlay: 必须提供有效的轨道索引 index');
       return null;
@@ -807,11 +812,6 @@ export default class ihm_TimeSlider {
     if (startDate >= endDate) {
       console.warn('addOverlay: startTime 必须早于 endTime');
       return null;
-    }
-
-    // 如果需要先清除该轨道的overlay
-    if (clear) {
-      this.clearOverlay(index);
     }
 
     // 解析时间
